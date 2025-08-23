@@ -78,9 +78,21 @@ Swift, Safe, Smart Deliveries using Autonomous Drones
 
 ## Screenshots
 ### **Dashboard**
+### **Admin Dashboard**
+The **Admin Dashboard** gives full control to administrators:  
+ -Manage **users, admins, and vaccine inventory**  
+ -Monitor **drone status, availability, and battery health**  
+ -Track **active, completed, and failed deliveries** in real time  
+
 <img src="static/photos/dashboard.jpg" alt="DDS Hero" width="700">
 
+
 ### **Tracking Page**
+The **Tracking Page** lets users:  
+-**Select vaccines and enter delivery coordinates**  
+ -**Verify location within operational range** using distance calculation  
+ -**Track real-time drone status** and mission progress with live updates  
+
 <img src="static/photos/tracking.jpg" alt="DDS Hero" width="700">
 
 ---
