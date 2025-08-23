@@ -87,11 +87,102 @@
     <div id="eta">Calculating ETA...</div>
     <div id="drone-status-list"></div>
   </section>
+  <style>
+    #drone-status-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+
+    .drone-status-box {
+      background: #f6f8fa;
+      border: 2px solid #2563eb;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+      padding: 1rem 1.5rem;
+      min-width: 220px;
+      max-width: 320px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .drone-status-box strong {
+      color: #2563eb;
+    }
+
+    .drone-eta {
+      font-size: 1.1rem;
+      color: #16a34a;
+      margin-top: 0.5em;
+      font-weight: bold;
+    }
+
+    #batch-token-form {
+      background: #fff;
+      border: 2px solid #d90429;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(217, 4, 41, 0.08);
+      padding: 1rem 1.5rem;
+      margin-top: 1rem;
+      min-width: 220px;
+      max-width: 320px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    #batch-token-form label {
+      color: #d90429;
+      font-weight: bold;
+    }
+
+    #batch-token-form input[type="text"] {
+      border: 2px solid #d90429;
+      border-radius: 4px;
+      padding: 0.4rem 0.7rem;
+      font-size: 1rem;
+      background: #fffdf6;
+      color: #222;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 0.5em;
+    }
+
+    #batch-token-form button {
+      background: #d90429;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      padding: 0.5rem 1.2rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #batch-token-form button:hover {
+      background: #2563eb;
+    }
+  </style>
+  </section>
   <main class="container">
     <section class="info-box">
       <h2>Delivery Information</h2>
-      <strong>Vaccine Type:</strong> {{ ','.join(data.vaccine_types) if data and data.vaccine_types else '---'
-      }}<br>
+      <strong>Vaccine :</strong>
+      {% if data and data.vaccine_types %}
+      {% set counts = {} %}
+      {% for v in data.vaccine_types %}
+      {% set counts = counts.update({v: counts.get(v, 0) | default(0, true) + 1}) or counts %}
+      {% endfor %}
+      {% for k, v in counts.items() %}
+      {{ k }}: {{ v }}{% if not loop.last %}, {% endif %}
+      {% endfor %}
+      {% else %}
+      ---
+      {% endif %}
+      <br>
       <strong>Latitude:</strong> {{ data.latitude if data else '---' }}<br>
       <strong>Longitude:</strong> {{ data.longitude if data else '---' }}<br>
       <strong>Distance:</strong> {{ data.distance if data else '---' }} km<br>
@@ -278,11 +369,22 @@
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
   const durationMs = (distanceMeters / 1000 / 100) * 3600 * 1000; // speed=100 km/h
 
-  // Get vaccine types from backend data (already rendered in Delivery Information)
-  const vaccineTypesText = document.querySelector('.info-box').innerText.match(/Vaccine Type:\s*(.*)/);
+  // Get vaccine counts from Delivery Information
+  const vaccineInfoText = document.querySelector('.info-box').innerText.match(/Vaccine\s*:\s*([\s\S]*?)Latitude:/);
   let vaccines = [];
-  if (vaccineTypesText && vaccineTypesText[1]) {
-    vaccines = vaccineTypesText[1].split(',').map(v => v.trim()).filter(v => v);
+  if (vaccineInfoText && vaccineInfoText[1]) {
+    // Example: "Covaxin: 3, Covishield: 4"
+    const entries = vaccineInfoText[1].split(',').map(e => e.trim()).filter(e => e);
+    entries.forEach(entry => {
+      const parts = entry.split(':');
+      if (parts.length === 2) {
+        const name = parts[0].trim();
+        const count = parseInt(parts[1].trim());
+        for (let i = 0; i < count; i++) {
+          vaccines.push(name);
+        }
+      }
+    });
   }
   if (vaccines.length === 0) vaccines = ['VaccineA']; // fallback
 
@@ -311,35 +413,61 @@
   }
 
   // ------------------ Independent Drone Simulation ------------------
+  // Batch token verification for all arrived drones
+  const arrivedDrones = [];
+  let tokenFormShown = false;
   function afterArrivalParallel(droneIdx, marker) {
-    const statusDiv = document.getElementById(`drone-status-${droneIdx}`);
-    statusDiv.innerHTML = `
-      <form id="tokenForm${droneIdx}">
-        <label><strong>Drone ${droneIdx + 1} (${vaccines[droneIdx]}): Enter Delivery Token:</strong></label>
-        <input type="text" id="deliveryToken${droneIdx}" required>
-        <button type="submit">Verify</button>
-      </form>
-      <div id="tokenError${droneIdx}" style="color:red;margin-top:8px;"></div>
-    `;
+    arrivedDrones.push({ idx: droneIdx, marker });
+    // Only show one token form for all arrived drones
+    if (!tokenFormShown) {
+      tokenFormShown = true;
+      const statusList = document.getElementById("drone-status-list");
+      const formDiv = document.createElement("div");
+      formDiv.id = "batch-token-form";
+      formDiv.innerHTML = `
+        <form id="tokenFormBatch">
+          <label><strong>Enter Delivery Token to dispatch all arrived drones:</strong></label>
+          <input type="text" id="deliveryTokenBatch" required>
+          <button type="submit">Verify</button>
+        </form>
+        <div id="tokenErrorBatch" style="color:red;margin-top:8px;"></div>
+      `;
+      statusList.appendChild(formDiv);
 
-    document.getElementById(`tokenForm${droneIdx}`).onsubmit = e => {
-      e.preventDefault();
-      const entered = document.getElementById(`deliveryToken${droneIdx}`).value.trim();
-      if (entered === serverToken) {
-        statusDiv.innerText = `Drone ${droneIdx + 1} Landing... Dispatching ${vaccines[droneIdx]}...`;
-        setTimeout(() => {
-          statusDiv.innerText = `Drone ${droneIdx + 1} Returning to Home Station...`;
-          animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
-            statusDiv.innerText = `Drone ${droneIdx + 1} Delivered!`;
+      document.getElementById("tokenFormBatch").onsubmit = e => {
+        e.preventDefault();
+        const entered = document.getElementById("deliveryTokenBatch").value.trim();
+        if (entered === serverToken) {
+          // Dispatch all arrived drones
+          arrivedDrones.forEach(({ idx, marker }) => {
+            document.getElementById(`drone-status-msg-${idx}`).innerText = `Landing... Dispatching ${vaccines[idx]}...`;
+            setTimeout(() => {
+              document.getElementById(`drone-status-msg-${idx}`).innerText = `Returning to Home Station...`;
+              animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
+                document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivered!`;
+              }, (etaSec) => {
+                document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
+              });
+            }, 2000);
           });
-        }, 2000);
-      } else {
-        document.getElementById(`tokenError${droneIdx}`).innerText = "Invalid token! Drone retreating.";
-        animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
-          statusDiv.innerText = `Drone ${droneIdx + 1} Delivery Failed: Invalid Token`;
-        });
-      }
-    };
+          arrivedDrones.length = 0;
+          tokenFormShown = false;
+          formDiv.remove();
+        } else {
+          document.getElementById("tokenErrorBatch").innerText = "Invalid token! All arrived drones retreating.";
+          arrivedDrones.forEach(({ idx, marker }) => {
+            animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
+              document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivery Failed: Invalid Token`;
+            }, (etaSec) => {
+              document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
+            });
+          });
+          arrivedDrones.length = 0;
+          tokenFormShown = false;
+          setTimeout(() => formDiv.remove(), 2000);
+        }
+      };
+    }
   }
 
   function startParallelDrones() {
@@ -348,17 +476,23 @@
     vaccines.forEach((vaccine, i) => {
       const statusDiv = document.createElement("div");
       statusDiv.id = `drone-status-${i}`;
-      statusDiv.style.marginBottom = "1em";
-      statusDiv.innerText = `Drone ${i + 1} (${vaccine}) waiting for dispatch...`;
+      statusDiv.className = "drone-status-box";
+      statusDiv.innerHTML = `<strong>Drone ${i + 1} (${vaccine})</strong><div class="drone-eta" id="drone-eta-${i}">ETA: --</div><div class="drone-status-msg" id="drone-status-msg-${i}">Waiting for dispatch...</div>`;
       statusList.appendChild(statusDiv);
       setTimeout(() => {
-        statusDiv.innerText = `Drone ${i + 1} (${vaccine}) heading to Target...`;
+        document.getElementById(`drone-status-msg-${i}`).innerText = `Heading to Target...`;
         const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
         marker.bindPopup(`Drone ${i + 1} - ${vaccine}`).openPopup();
-        animateDroneAlongPath(path, durationMs, marker, () => {
-          afterArrivalParallel(i, marker);
-        });
-      }, i * 13000);
+        animateDroneAlongPath(
+          path,
+          durationMs,
+          marker,
+          () => { afterArrivalParallel(i, marker); },
+          (etaSec) => {
+            document.getElementById(`drone-eta-${i}`).innerText = `ETA: ${etaSec}s`;
+          }
+        );
+      }, i * 4320);
     });
   }
 
