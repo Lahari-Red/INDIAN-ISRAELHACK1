@@ -46,13 +46,13 @@ Only authorized users can schedule dispatches, ensuring **security, integrity, a
 
 Our in-house navigation system overlays a color-coded zone framework to manage drone delivery operations efficiently and safely:
 
-<p><span style="color: red; font-size: 18px;">&#9679;</span> <strong>Red Zones:</strong> These are strictly no-fly zones where drone operations are either prohibited or permitted only with explicit central government authorization...</p>
+🔴</span> <strong>Red Zones:</strong> These are strictly no-fly zones where drone operations are either prohibited or permitted only with explicit central government authorization...</p>
 
-<p><span style="color: yellow; font-size: 18px;">&#9679;</span> <strong>Outer Range (Yellow Zone):</strong> This outer operational boundary extends beyond the inner range but within the drone’s authorized flight perimeter...</p>
+🟡<strong>Outer Range (Yellow Zone):</strong> This outer operational boundary extends beyond the inner range but within the drone’s authorized flight perimeter...</p>
 
-<p><span style="color: blue; font-size: 18px;">&#9679;</span> <strong>Inner Range (Blue Zone):</strong> This zone is the drone’s efficient two-way travel range, closer to the base station...</p>
+🔵<strong>Inner Range (Blue Zone):</strong> This zone is the drone’s efficient two-way travel range, closer to the base station...</p>
 
-<p><span style="color: green; font-size: 18px;">&#9679;</span> <strong>Safe Zones (Green Zones):</strong> Strategically positioned landing or standby spots where drones can safely land, recharge, or wait between deliveries...</p>
+🟢<strong>Safe Zones (Green Zones):</strong> Strategically positioned landing or standby spots where drones can safely land, recharge, or wait between deliveries...</p>
 
 
 This zone-based navigation strategy leverages informed routing and strict compliance with regulatory no-fly zones (red), while optimizing delivery efficiency and safety during both short-range (blue) and longer-range (yellow) operations.
