@@ -411,6 +411,7 @@
                     <form method="POST" action="/login">
                         <label for="membertype">
                             Member Type
+                            <br>
                             {% if membertype_error %}<span class="error-msg">{{ membertype_error }}</span>{% endif %}
                             <select name="memberType" id="memberType">
                                 <option value="" disabled selected>Select your role</option>
@@ -418,10 +419,16 @@
                                 <option value="user" selected>User</option>
                             </select>
                         </label>
-                        <label>Email {% if email_error %}<span class="error-msg">{{ email_error }}</span>{% endif %}
+                        <label>Email
+                            <br>
+                            {% if email_error %}<span class="error-msg">{{ email_error }}</span>{% endif %}
+                            <br>
                             <input type="text" name="email" placeholder="Enter your email" value="{{ email if email else '' }}">
                         </label>
-                        <label>Password {% if password_error %}<span class="error-msg">{{ password_error }}</span>{% endif %}
+                        <label>Password 
+                            <br>
+                            {% if password_error %}<span class="error-msg">{{ password_error }}</span>{% endif %}
+                            <br>
                             <input type="password" name="password" placeholder="Enter your password">
                         </label>
                         <div class="auth-actions">
@@ -437,14 +444,14 @@
                     <p class="lede">Create your Drone Dispatch System (DDS) dashboard.</p>
                     {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
                     <form method="POST" action="/register">
-                        <label>Email {% if email_error %}<span class="error-msg">{{ email_error }}</span>{% endif %}
-                            <input type="text" name="email_" placeholder="Enter your email" value="{{ email if email else '' }}">
+                        <label>Email<br> {% if email_error %}<span class="error-msg">{{ email_error }}</span>{% endif %}
+                        <br><input type="text" name="email_" placeholder="Enter your email" value="{{ email if email else '' }}">
                         </label>
-                        <label>Password {% if password_error %}<span class="error-msg">{{ password_error }}</span>{% endif %}
-                            <input type="password" name="password_" placeholder="Enter your password" value="{{ password if password else '' }}">
+                        <label>Password <br>{% if password_error %}<span class="error-msg">{{ password_error }}</span>{% endif %}
+                           <br> <input type="password" name="password_" placeholder="Enter your password" value="{{ password if password else '' }}">
                         </label>
-                        <label>Access Token {% if access_token_error %}<span class="error-msg">{{ access_token_error }}</span>{% endif %}
-                            <input type="text" name="access_token" placeholder="Enter your access token" value="{{ access_token if access_token else '' }}">
+                        <label>Access Token<br> {% if access_token_error %}<span class="error-msg">{{ access_token_error }}</span>{% endif %}
+                            <br><input type="text" name="access_token" placeholder="Enter your access token" value="{{ access_token if access_token else '' }}">
                         </label>
                         <div class="auth-actions">
                             <button type="submit" class="btn-signup">Sign Up</button>
