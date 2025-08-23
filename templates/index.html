@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Dispatch System (DDS)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Smooth scrolling and sticky navbar */
+        html { scroll-behavior: smooth; }
+        .nav-wrap {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #fff8e7;
+            animation: fadeIn 1s ease-in;
+        }
+        /* Centering styles for sections */
+        .hero-inner, .cards, .grid.team, .drone-wrap, .page-head, .navigation-model {
+            justify-content: center;
+            text-align: center;
+        }
+        .hero-copy {
+            margin: 0 auto;
+            max-width: 700px;
+        }
+        /* Section styling */
+        .section {
+            background: linear-gradient(180deg, #efe8d8, #f6eddc);
+            animation: fadeIn 1s ease-in;
+        }
+        /* Tech stack card images */
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+        /* Navigation model section */
+        .navigation-model {
+            padding: 2rem 0;
+        }
+        .navigation-model img {
+            max-width: 300px;
+            border: 3px solid #333;
+            border-radius: 6px;
+            box-shadow: 6px 6px 0 #222;
+            margin: 1.5rem auto;
+        }
+        /* Login section */
+        #login-section {
+            padding: 4rem 0;
+        }
+        #login-section h2 {
+            font-size: 3.5rem;
+            color: #d90429;
+            text-shadow: 3px 3px #9a7b4f;
+            margin-bottom: 2.5rem;
+            text-transform: uppercase;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        /* Auth sections */
+        .auth-section {
+            display: none;
+            padding: 2rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .auth-section.active {
+            display: block;
+        }
+        /* Login form specific styles */
+        #signin.auth-section {
+            background: #fffdf6;
+            border: 3px solid #333;
+            border-radius: 6px;
+            box-shadow: 8px 8px 0 #222;
+            animation: fadeIn 0.8s ease-in;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #signin form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            align-items: stretch;
+        }
+        #signin label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            color: #333;
+            letter-spacing: 1px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        #signin input, #signin select {
+            padding: 0.8rem;
+            border: 2px solid #333;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            background: #f6eddc;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            width: 100%;
+        }
+        #signin input:focus, #signin select:focus {
+            border-color: #d90429;
+            box-shadow: 0 0 5px rgba(217, 4, 41, 0.3);
+            outline: none;
+        }
+        #signin .error-msg {
+            color: #d90429;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+            text-align: left;
+        }
+        #signin .auth-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            align-items: center;
+        }
+        #signin .btn-signin, #signin .btn-signup {
+            flex: 1;
+            text-align: center;
+            padding: 0.8rem;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s;
+            cursor: pointer;
+        }
+        #signin .btn-signin {
+            background: #d90429;
+            color: #fff;
+            box-shadow: 3px 3px 0 #111;
+            border: none;
+        }
+        #signin .btn-signin:hover {
+            background: #b10321;
+            transform: scale(1.05);
+        }
+        #signin .btn-signup {
+            border: 2px solid #d90429;
+            color: #d90429;
+            background: none;
+            box-shadow: 3px 3px 0 #ddd;
+        }
+        #signin .btn-signup:hover {
+            background: #d90429;
+            color: #fff;
+            transform: scale(1.05);
+        }
+        /* Fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero-copy { max-width: 90%; }
+            #signin.auth-section { max-width: 90%; }
+            #login-section h2 { font-size: 2.5rem; }
+            #signin .auth-actions { flex-direction: column; gap: 0.8rem; }
+            #signin .btn-signin, #signin .btn-signup { width: 100%; }
+            .cards { grid-template-columns: 1fr; }
+            .navigation-model img { max-width: 90%; }
+        }
+    </style>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csvSheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    var csv = XLSX.utils.sheet_to_csv(csvSheet, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+        function toggle(form) {
+            document.getElementById('signin').classList.remove('active');
+            document.getElementById('signup').classList.remove('active');
+            document.getElementById(form).classList.add('active');
+            window.scrollTo({ top: document.getElementById('login-section').offsetTop - 50, behavior: 'smooth' });
+        }
+        window.addEventListener('DOMContentLoaded', function () {
+            {% if signup_error %}
+                toggle('signup');
+            {% else %}
+                toggle('signin');
+            {% endif %}
+        });
+    </script>
+</head>
+
+<body>
+    <nav class="nav-wrap">
+        <div class="container nav">
+            <div class="brand">
+                <div class="logo-placeholder"></div>
+                pulseDrone
+            </div>
+            <div class="links">
+                <a href="#tech-stack">Tech Stack</a>
+                <a href="#navigation-model">Navigation Model</a>
+                <a href="#team">Team</a>
+                <a href="#drone">Drone</a>
+                <a href="#signin" onclick="toggle('signin')">Login</a>
+                <a href="#signup" onclick="toggle('signup')">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero section">
+        <div class="container hero-inner">
+            <div class="hero-copy">
+                <h1>Drone Dispatch System: Swift, Safe, Smart Deliveries</h1>
+                <p class="lede">Optimized software for autonomous, reliable, and efficient delivery of medical supplies.</p>
+                <div class="cta">
+                    <a href="#signin" class="btn" onclick="toggle('signin')">Login</a>
+                    <a href="#tech-stack" class="btn ghost">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="{{ url_for('static', filename='photos/into_image.png') }}" alt="Hero Image" width="500" height="400">
+            </div>
+        </div>
+    </section>
+
+    <section id="tech-stack" class="pad-block section">
+        <div class="container">
+            <div class="page-head">
+                <h2>Technology Stack</h2>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <img src="{{ url_for('static', filename='flask.png') }}" alt="Flask Logo">
+                    <h3>Backend: Python Flask</h3>
+                    <p>Robust API and application logic for scalable, secure drone management.</p>
+                </div>
+                <div class="card">
+                    <img src="{{ url_for('static', filename='html.png') }}" alt="Frontend Logo">
+                    <h3>Frontend: HTML, CSS, JS</h3>
+                    <p>Clean, responsive UI/UX for intuitive user interaction.</p>
+                </div>
+                <div class="card">
+                    <img src="{{ url_for('static', filename='leaflet.png') }}" alt="Leaflet Logo">
+                    <h3>Interactive Map: Leaflet</h3>
+                    <p>Dynamic map visualizations for real-time drone tracking and route planning.</p>
+                </div>
+                <div class="card">
+                    <img src="{{ url_for('static', filename='aiven.png') }}" alt="Aiven Logo">
+                    <h3>Database: Aiven</h3>
+                    <p>Managed cloud database for secure, reliable data storage and retrieval.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="navigation-model" class="pad-block section">
+        <div class="container">
+            <div class="page-head">
+                <h2>Navigation Model</h2>
+                <p class="lede">Our advanced navigation system ensures precise and efficient drone deliveries.</p>
+            </div>
+            <div class="navigation-model">
+                <p>At the heart of the Drone Dispatch System is our ML-driven navigation model, leveraging advanced machine learning algorithms for autonomous flight planning. Integrated with Leaflet’s interactive mapping, our system dynamically optimizes routes in real-time, accounting for obstacles, weather conditions, and airspace regulations. The model employs a graph-based approach for pathfinding, ensuring drones take the safest and fastest routes to deliver medical supplies. With GPS precision and continuous data updates from our Aiven-powered cloud database, DDS guarantees reliable, on-time deliveries in critical scenarios.</p>
+                <img src="{{ url_for('static', filename='photos/navigation-diagram.png') }}" alt="Navigation Model Diagram">
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="pad-block team-section section">
+        <div class="container">
+            <div class="page-head">
+                <h2>Meet the Team</h2>
+            </div>
+            <div class="grid team">
+                <div class="person"><div class="avatar-img"><img src="{{ url_for('static', filename='photos/team/LAKSHITA.jfif') }}" alt="Lakshita" /></div><h3>Lakshita</h3><p>AI/ML Implementation</p><small>lakshitaagarwal2411@gmail.com</small></div>
+                <div class="person"><div class="avatar-img"><img src="{{ url_for('static', filename='photos/team/lahari.jpg') }}" alt="Lahari" /></div><h3>Lahari</h3><p>Frontend (UI/UX)</p><small>bomminelilahari@gmail.com</small></div>
+                <div class="person"><div class="avatar-img"><img src="{{ url_for('static', filename='photos/team/kaamya.jpg') }}" alt="Kaamya" /></div><h3>Kaamya</h3><p>Idea and DevOps</p><small>kmatbha_be24@thapar.edu</small></div>
+                <div class="person"><div class="avatar-img"><img src="{{ url_for('static', filename='photos/team/kamesh.jfif') }}" alt="Kamesh" /></div><h3>Kamesh</h3><p>Website Backend</p><small>yadavkamesh19@gmail.com</small></div>
+                <div class="person"><div class="avatar-img"><img src="{{ url_for('static', filename='photos/team/aryan.png') }}" alt="Aryan" /></div><h3>Aryan</h3><p>Website Backend</p><small>aryanwastiht017@gmail.com</small></div>
+                <div class="person"><div class="avatar-img"><img src="{{ url_for('static', filename='photos/team/abhinab.jpg') }}" alt="Abhinab" /></div><h3>Abhinab</h3><p>Drone Logic & Visualization</p><small>abhinab2k05@gmail.com</small></div>
+            </div>
+        </div>
+        <br>
+        <h5 style="text-align: center;">Special thanks to Mr. GPT, Miss Perplexity, and Dr. Grok for their contribution.</h5>
+
+    </section>
+
+    <section id="drone" class="pad-block drone-section section">
+        <div class="container">
+            <div class="page-head">
+                <h2>The Drone</h2>
+                <p class="lede">Engineered for speed, reliability, and lifesaving delivery.</p>
+            </div>
+            <div class="drone-wrap">
+                <div class="drone-image-container"><div class="drone-image"></div></div>
+                <div class="specs">
+                    <ul class="drone-specs">
+                        <li><span>Max Range</span><strong>15 km</strong></li>
+                        <li><span>Payload</span><strong>8 kg</strong></li>
+                        <li><span>Top Speed</span><strong>80 km/h</strong></li>
+                        <li><span>Autonomy</span><strong>AI-powered</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="login-section" class="pad-block section">
+        <div class="container">
+            <h2>Login</h2>
+            <section id="signin" class="auth-section active">
+                <div class="container">
+                    <p class="lede">Access your Drone Dispatch System (DDS) dashboard.</p>
+                    {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
+                    <form method="POST" action="/login">
+                        <label for="membertype">
+                            Member Type
+                            {% if membertype_error %}<span class="error-msg">{{ membertype_error }}</span>{% endif %}
+                            <select name="memberType" id="memberType">
+                                <option value="" disabled selected>Select your role</option>
+                                <option value="admin">Admin</option>
+                                <option value="user" selected>User</option>
+                            </select>
+                        </label>
+                        <label>Email {% if email_error %}<span class="error-msg">{{ email_error }}</span>{% endif %}
+                            <input type="text" name="email" placeholder="Enter your email" value="{{ email if email else '' }}">
+                        </label>
+                        <label>Password {% if password_error %}<span class="error-msg">{{ password_error }}</span>{% endif %}
+                            <input type="password" name="password" placeholder="Enter your password">
+                        </label>
+                        <div class="auth-actions">
+                            <button type="submit" class="btn-signin">Login</button>
+                            <button type="button" class="btn-signup" onclick="toggle('signup')">Sign Up</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="signup" class="auth-section">
+                <div class="container">
+                    <p class="lede">Create your Drone Dispatch System (DDS) dashboard.</p>
+                    {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
+                    <form method="POST" action="/register">
+                        <label>Email {% if email_error %}<span class="error-msg">{{ email_error }}</span>{% endif %}
+                            <input type="text" name="email_" placeholder="Enter your email" value="{{ email if email else '' }}">
+                        </label>
+                        <label>Password {% if password_error %}<span class="error-msg">{{ password_error }}</span>{% endif %}
+                            <input type="password" name="password_" placeholder="Enter your password" value="{{ password if password else '' }}">
+                        </label>
+                        <label>Access Token {% if access_token_error %}<span class="error-msg">{{ access_token_error }}</span>{% endif %}
+                            <input type="text" name="access_token" placeholder="Enter your access token" value="{{ access_token if access_token else '' }}">
+                        </label>
+                        <div class="auth-actions">
+                            <button type="submit" class="btn-signup">Sign Up</button>
+                            <button type="button" class="btn-signin" onclick="toggle('signin')">Sign In</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container"><p>© 2025 Drone Dispatch System (DDS) — Drone Devs</p></div>
+    </footer>
+</body>
+</html>

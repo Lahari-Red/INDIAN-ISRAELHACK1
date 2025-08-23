@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDS Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #222;
+            margin: 0;
+        }
+
+        .nav-wrap {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(217, 4, 41, 0.08);
+            padding: 0;
+        }
+
+        .container.nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #d90429;
+            gap: 12px;
+        }
+
+        .logo-placeholder {
+            width: 36px;
+            height: 36px;
+            background: #d90429;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 24px;
+        }
+
+        .admin-nav a {
+            color: #d90429;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .admin-nav a:hover {
+            background: #d90429;
+            color: #fff;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 32px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(217, 4, 41, 0.07);
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #d90429;
+            letter-spacing: 1px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 28px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: linear-gradient(120deg, #fff 60%, #f8f9fa 100%);
+            border-radius: 10px;
+            padding: 28px 18px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(217, 4, 41, 0.04);
+            transition: box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 24px rgba(217, 4, 41, 0.10);
+        }
+
+        .stat-card h2 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+            color: #d90429;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            margin: 0;
+            color: #444;
+            font-size: 1.05em;
+        }
+
+        .admin-section {
+            margin-bottom: 40px;
+        }
+
+        .admin-section h3 {
+            margin-bottom: 16px;
+            font-size: 1.25em;
+            color: #d90429;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 6px rgba(217, 4, 41, 0.03);
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f1f1f1;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #d90429;
+            letter-spacing: 0.5px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-btn,
+        .btn {
+            background-color: #d90429;
+            color: white;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            font-size: 1em;
+            box-shadow: 0 1px 4px rgba(217, 4, 41, 0.08);
+        }
+
+        .action-btn:hover,
+        .btn:hover {
+            background-color: #de3a55;
+            box-shadow: 0 2px 8px rgba(217, 4, 41, 0.12);
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            background: #f8f9fa;
+            transition: border 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            border-color: #d90429;
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        img {
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(217, 4, 41, 0.07);
+        }
+
+        .footer {
+            margin-top: 48px;
+            background: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+            color: #888;
+            font-size: 1em;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-wrap">
+        <div class="container nav">
+            <div class="brand">
+                <div class="logo-placeholder"></div>
+                DDS Admin Dashboard
+            </div>
+            {{messages}}
+            <div class="admin-nav">
+                <a href="#stats">Stats</a>
+                <a href="#users">Users</a>
+                <a href="#drones">Drones</a>
+                <a href="#deliveries">Deliveries</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Welcome, Admin</h1>
+        </div>
+
+        <section id="stats" class="stats-grid">
+            <div class="stat-card">
+                <h2>{{ total_users }}</h2>
+                <p>Total Users</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_drones }}</h2>
+                <p>Active Drones</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_requests }}</h2>
+                <p>Total Requests</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_deliveries }}</h2>
+                <p>Deliveries</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ pending_deliveries }}</h2>
+                <p>Pending Requests</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ failed_deliveries }}</h2>
+                <p>Failed deliveries</p>
+            </div>
+        </section>
+        <section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    <tr>
+                        <td>{{ admin.email }}</td>
+                        <td>{{ admin.created_at }}</td>
+                        <td>
+                            <form action="/delete_admin/{{ admin.email }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn"
+                                    onclick="return confirm('Delete this admin?');">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        <section id="new-admin" class="admin-section">
+            <h3>Create New Admin</h3>
+            <form action="/add_admin" method="POST" style="max-width:400px;">
+                <div style="margin-bottom:12px;">
+                    <label for="admin_email" style="display:block;font-weight:600;">Email</label>
+                    {% if email_error %}
+                    <span style="color:red;">{{ email_error }}</span>
+                    {% endif %}
+
+                    <input type="text" id="admin_email" name="admin_email" value="{{email}}"
+                        style="width:100%;padding:8px;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="admin_password" style="display:block;font-weight:600;">Password</label>
+                    {% if password_error %}
+                    <span style="color:red;">{{ password_error }}</span>
+                    {% endif %}
+                    <input type="password" id="admin_password" name="admin_password" style="width:100%;padding:8px;">
+                </div>
+                <button type="submit" class="btn">Create Admin</button>
+            </form>
+        </section>
+        <section id="users" class="admin-section">
+            <h3>User Management</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.created_at }}</td>
+                        <td>
+                            <form action="/delete_user/{{ user.email }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn"
+                                    onclick="return confirm('Delete this user?');">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section id="drones" class="admin-section">
+            <h3>Drone Fleet</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Battery</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for drone in drones %}
+                    <tr>
+                        <td>{{ drone.id }}</td>
+                        <td>{{ drone.status }}</td>
+                        <td>{{ drone.location }}</td>
+                        <td>{{ drone.battery }}%</td>
+                        <td>
+                            <button class="action-btn" onclick="viewDrone('{{ drone.id }}')">View</button>
+                            <button class="action-btn" onclick="removeDrone('{{ drone.id }}')">Remove</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if drones|length == 0 %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;">No drones available</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </section>
+
+        <section id="deliveries" class="admin-section">
+            <h3>Delivery Requests</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>User</th>
+                        <th>Vaccine Name</th>
+                        <th>Location Coordinates</th>
+                        <th>Distance</th>
+                        <th>Created At</th>
+                        <th>delivery_token</th>
+                        <th>updated_at</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for delivery in deliveries %}
+                    <tr>
+                        <td>{{ delivery.id }}</td>
+                        <td>{{ delivery.user_mail }}</td>
+                        <td>
+                            <span>
+                                <img src="{{delivery.image_url}}" alt="" width="100px">
+                                <em>{{delivery.name}}</em>
+                            </span>
+                        </td>
+                        <td><span>({{delivery.latitude}},{{delivery.longitude}})</span></td>
+                        <td>{{ delivery.distance_km }} km</td>
+                        <td>{{delivery.created_at}}</td>
+                        <td>{{delivery.delivery_token}}</td>
+                        <td>{{delivery.updated_at}}</td>
+                        <td>{{delivery.status}}</td>
+                        <td>
+                            <form action="/delete_delivery/{{ delivery.id }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn"
+                                    onclick="return confirm('Delete this delivery request?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section id="vaccines" class="admin-section">
+            <h3>Vaccines</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vaccine ID</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vaccine in vaccines %}
+                    <tr>
+                        <td>{{ vaccine.id }}</td>
+                        <td>
+                            {% if vaccine.image_url %}
+                            <img src="{{ vaccine.image_url }}" alt="{{ vaccine.name }}"
+                                style="max-width:100px; max-height:100px;">
+                            {% else %}
+                            <span>No image</span>
+                            {% endif %}
+                        </td>
+                        <td><em>{{ vaccine.name }}</em></td>
+                        <td>{{ vaccine.description }}</td>
+                        <td>
+                            <form action="/delete_vaccine/{{ vaccine.id }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-btn"
+                                    onclick="return confirm('Delete this vaccine?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <form action="/add_vaccine" method="POST">
+                            <td></td>
+                            <td>
+                                {% if image_url_error %}
+                                <span style="color:red;">{{ image_url_error }}</span>
+                                {% endif %}
+                                <input type="url" placeholder="Image URL" name="image_url" style="width:100%;">
+                            </td>
+                            <td>
+                                {% if vaccine_name_error %}
+                                <span style="color:red;">{{ vaccine_name_error }}</span>
+                                {% endif %}
+                                <input type="text" placeholder="Vaccine Name" name="vaccine_name" style="width:100%;">
+                            </td>
+                            <td>
+                                {% if description_error %}
+                                <span style="color:red;">{{ description_error }}</span>
+                                {% endif %}
+                                <textarea placeholder="Description" name="description"
+                                    style="width:100%;height:60px;resize:none;"></textarea>
+                            </td>
+                            <td>
+                                <button type="submit" class="action-btn">Add Vaccine</button>
+                            </td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Drone Dispatch System (DDS) — Admin Dashboard</p>
+        </div>
+    </footer>
+
+    <script>
+        function editUser(id) { alert('Edit user: ' + id); }
+        function deleteUser(id) { if (confirm('Delete user?')) { /* AJAX call or form submit */ } }
+        function viewDrone(id) { alert('View drone: ' + id); }
+        function removeDrone(id) { if (confirm('Remove drone?')) { /* AJAX call or form submit */ } }
+        function updateDelivery(id) { alert('Update delivery: ' + id); }
+        function cancelDelivery(id) { if (confirm('Cancel delivery?')) { /* AJAX call or form submit */ } }
+    </script>
+</body>
+
+</html>
