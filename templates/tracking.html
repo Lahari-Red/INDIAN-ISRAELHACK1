@@ -1,24 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drone Dispatch System</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f6f8fa; margin: 0; padding: 0; }
-    header { background: #2d3748; color: #fff; padding: 1.5rem 0; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .hero { max-width: 1200px; margin: 2rem auto 0; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.07); display: flex; justify-content: center; align-items: center; background: #fff; padding: 1rem; flex-direction: column; }
-    #map { width: 100%; height: 400px; border-radius: 16px; }
-    #eta { margin-top: 1rem; font-size: 1.2rem; color: #2563eb; font-weight: bold; }
-    .container { max-width: 1200px; margin: 2rem auto; display: flex; gap: 2rem; flex-wrap: wrap; padding: 0 1rem; }
-    .info-box { flex: 1 1 350px; background: #fff; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 24px rgba(0,0,0,0.07); min-width: 280px; }
-    h2 { color: #2563eb; }
-    h3 { color: #16a34a; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f6f8fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #2d3748;
+      color: #fff;
+      padding: 1.5rem 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: 2rem auto 0;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fff;
+      padding: 1rem;
+      flex-direction: column;
+    }
+
+    #map {
+      width: 100%;
+      height: 400px;
+      border-radius: 16px;
+    }
+
+    #eta {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #2563eb;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 0 1rem;
+    }
+
+    .info-box {
+      flex: 1 1 350px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+      min-width: 280px;
+    }
+
+    h2 {
+      color: #2563eb;
+    }
+
+    h3 {
+      color: #16a34a;
+    }
   </style>
 </head>
+
 <body>
-  <header><h1>Drone Dispatch System</h1></header>
+  <header>
+    <h1>Drone Dispatch System</h1>
+  </header>
   <section class="hero">
     <div id="map"></div>
     <div id="eta">Calculating ETA...</div>
@@ -28,14 +90,14 @@
       <h2>Delivery Information</h2>
       <ul>
         <li><strong>Vaccine Type:</strong> {{ data.vaccine_type if data else '---' }}<br>
-            <strong>Latitude:</strong> {{ data.latitude if data else '---' }}<br>
-            <strong>Longitude:</strong> {{ data.longitude if data else '---' }}<br>
-            <strong>Distance:</strong> {{ data.distance if data else '---' }} km<br>
-            <strong>Access Token:</strong> <span id="serverToken">{{ token if token else '' }}</span>
+          <strong>Latitude:</strong> {{ data.latitude if data else '---' }}<br>
+          <strong>Longitude:</strong> {{ data.longitude if data else '---' }}<br>
+          <strong>Distance:</strong> {{ data.distance if data else '---' }} km<br>
+          <strong>Access Token:</strong> <span id="serverToken">{{ token if token else '' }}</span>
         </li>
       </ul>
     </section>
-    
+
   </main>
 </body>
 
@@ -43,14 +105,14 @@
 <script>
   // ------------------ Setup ------------------
   const homeLat = 30.3529, homeLng = 76.3637;
-  const targetLat = {{ data.latitude|default(30.3529) }}, 
-        targetLng = {{ data.longitude|default(76.3637) }};
+  const targetLat = {{ data.latitude|default (30.3529) }},
+  targetLng = {{ data.longitude |default (76.3637) }};
 
-  const serverToken = document.getElementById("serverToken").innerText.trim() || 
-                      Math.floor(100000 + Math.random() * 900000).toString(); // fallback token
+  const serverToken = document.getElementById("serverToken").innerText.trim() ||
+    Math.floor(100000 + Math.random() * 900000).toString(); // fallback token
 
   const map = L.map('map').setView([homeLat, homeLng], 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
   L.marker([homeLat, homeLng]).addTo(map).bindPopup("Home Station").openPopup();
   L.marker([targetLat, targetLng]).addTo(map).bindPopup("Delivery Location");
@@ -82,7 +144,7 @@
     for (const [cLat, cLng, radius] of zones) {
       const dLat = lat - cLat;
       const dLng = lng - cLng;
-      const dist = Math.sqrt(dLat*dLat + dLng*dLng);
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
       if (dist <= radius) {
         return true; // inside zone
       }
@@ -103,15 +165,15 @@
       const dx = x2 - x1, dy = y2 - y1;
       const fx = x1 - cx, fy = y1 - cy;
 
-      const a = dx*dx + dy*dy;
-      const b = 2 * (fx*dx + fy*dy);
-      const c = (fx*fx + fy*fy) - r*r;
+      const a = dx * dx + dy * dy;
+      const b = 2 * (fx * dx + fy * dy);
+      const c = (fx * fx + fy * fy) - r * r;
 
-      let disc = b*b - 4*a*c;
+      let disc = b * b - 4 * a * c;
       if (disc < 0) return false;
       disc = Math.sqrt(disc);
-      const t1 = (-b - disc) / (2*a);
-      const t2 = (-b + disc) / (2*a);
+      const t1 = (-b - disc) / (2 * a);
+      const t2 = (-b + disc) / (2 * a);
 
       return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
     }
@@ -131,7 +193,7 @@
 
           // try two tangent detours
           const tangentCandidates = [];
-          [ Math.PI/2, -Math.PI/2 ].forEach(offset => {
+          [Math.PI / 2, -Math.PI / 2].forEach(offset => {
             const angle = baseAngle + offset;
             tangentCandidates.push([
               cLat + (radius + 0.0005) * Math.sin(angle), // <-- added margin
@@ -163,8 +225,8 @@
             let tries = 0;
             while (tries < 50) {
               cand = [
-                cLat + (radius + 0.0005 * (tries+1)) * Math.sin(baseAngle + Math.PI/2),
-                cLng + (radius + 0.0005 * (tries+1)) * Math.cos(baseAngle + Math.PI/2)
+                cLat + (radius + 0.0005 * (tries + 1)) * Math.sin(baseAngle + Math.PI / 2),
+                cLng + (radius + 0.0005 * (tries + 1)) * Math.cos(baseAngle + Math.PI / 2)
               ];
               // check if cand→end is safe...
               let ok = true;
@@ -288,4 +350,5 @@
 
   startSequence();
 </script>
+
 </html>
