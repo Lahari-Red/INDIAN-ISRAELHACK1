@@ -42,8 +42,7 @@ Only authorized users can schedule dispatches, ensuring **security, integrity, a
 ---
 
 ## **In-House Navigation Model**
-
-<img src="static/photos/navigationmap.jpg" alt="DDS Hero" width="700">
+<img width="700" height="500" alt="Drone Dispatch System - Google Chrome 8_23_2025 10_45_55 PM" src="https://github.com/user-attachments/assets/912d5832-ea17-4109-b10a-579f50b7f77d" />
 
 Our in-house navigation system overlays a color-coded zone framework to manage drone delivery operations efficiently and safely:
 
