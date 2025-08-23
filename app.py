@@ -170,8 +170,22 @@ def user_dashboard():
 @app.route('/tracking', methods=['GET', 'POST'])
 def tracking():
     if request.method == 'POST':
-        vaccine_types = request.form.getlist('vaccines')
-        print(vaccine_types)
+        vaccine_types =list()
+        vaccine_counts = {}
+        for vaccine in session.get('vaccines', []):
+            count_key = f"vaccine_counts_{vaccine['name']}"
+            count = request.form.get(count_key)
+            try:
+                vaccine_counts[vaccine['name']] = int(count) if count is not None else 0
+            except ValueError:
+                vaccine_counts[vaccine['name']] = 0
+        #remove zero count vaccines
+        # Remove zero count vaccines and corresponding vaccine types
+        vaccine_counts = {k: v for k, v in vaccine_counts.items() if v > 0}
+        for(k,v) in vaccine_counts.items():
+            for i in range(v):
+                vaccine_types.append(k)
+        # return jsonify(vaccine_counts)
         latitude = request.form.get('lat')
         longitude = request.form.get('lng')
         vaccine_error=None
