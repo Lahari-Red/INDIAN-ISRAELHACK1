@@ -265,8 +265,8 @@
                             <button type="button" onclick="changeCount({{ loop.index }}, 1)"
                                 style="font-size:1.2rem;">+</button>
                             <input type="number" id="vaccineCount{{ loop.index }}"
-                                name="vaccine_counts_{{ vaccine.name }}" value="0" min="0"
-                                style="width:3rem;text-align:center;" readonly>
+                                name="vaccine_counts_{{ vaccine.name }}" style="width:3rem;text-align:center;"
+                                value="0">
                             <button type="button" onclick="changeCount({{ loop.index }}, -1)"
                                 style="font-size:1.2rem;">-</button>
                         </div>
@@ -419,7 +419,24 @@
             }
         });
 
+
     </script>
+    <script>
+        function changeCount(idx, delta) {
+            const input = document.getElementById('vaccineCount' + idx);
+            let val = parseInt(input.value) || 0;
+
+            // Apply limit of 5
+            if (delta > 0 && val < 5) {
+                val = val + delta;
+            } else if (delta < 0 && val > 0) {
+                val = val + delta;
+            }
+
+            input.value = val;
+        }
+    </script>
+
 </body>
 
 </html>
