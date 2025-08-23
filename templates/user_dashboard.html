@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
         /* Adjust container padding for narrower side margins */
         .dashboard-section .container {
             padding: 0 1rem;
         }
+
         /* Side-by-side layout */
         .cards {
             display: flex;
@@ -20,6 +23,7 @@
             align-items: flex-start;
             justify-content: center;
         }
+
         /* Vaccine cards */
         .vaccine-card {
             display: grid;
@@ -28,10 +32,12 @@
             flex: 1 1 360px;
             min-width: 0;
         }
+
         .vaccine-card .card {
             padding: 0.8rem;
             min-width: 160px;
         }
+
         .vaccine-card img {
             width: 100%;
             height: 90px;
@@ -40,24 +46,89 @@
             margin-bottom: 0.6rem;
             border: 3px solid #333;
         }
+
         .vaccine-card h3 {
             font-size: 0.95rem;
             color: #d90429;
             text-shadow: 1px 1px #9a7b4f;
             margin-bottom: 0.3rem;
         }
+
         .vaccine-card p {
             font-size: 0.8rem;
             color: #222;
         }
+
         /* Radio button selection */
         input[type="checkbox"] {
             display: none;
         }
-        input[type="checkbox"]:checked + label .card {
+
+        input[type="checkbox"]:checked+label .card {
             border: 3px solid #d90429;
             box-shadow: 8px 8px 0 #111;
         }
+
+        /* Button styles */
+        button.btn,
+        .vaccine-card button {
+            background: #d90429;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            padding: 0.5rem 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 2px 2px 0 #9a7b4f;
+        }
+
+        button.btn:hover,
+        .vaccine-card button:hover {
+            background: #9a7b4f;
+            color: #222;
+        }
+
+        input[type="number"] {
+            border: 2px solid #d90429;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-size: 1rem;
+            background: #fffdf6;
+            color: #222;
+        }
+
+        label {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            color: #222;
+            margin-bottom: 0.3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        input[type="text"] {
+            border: 2px solid #d90429;
+            border-radius: 4px;
+            padding: 0.4rem 0.7rem;
+            font-size: 1rem;
+            background: #fffdf6;
+            color: #222;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: #d90429;
+            text-shadow: 2px 2px #9a7b4f;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
         /* Map and form */
         .other-card {
             background: #fffdf6;
@@ -72,6 +143,7 @@
             align-items: center;
             min-width: 0;
         }
+
         .map {
             width: 100%;
             height: 500px;
@@ -79,6 +151,7 @@
             border: 3px solid #333;
             margin-bottom: 1.5rem;
         }
+
         .other-card form {
             width: 100%;
             display: flex;
@@ -86,6 +159,7 @@
             gap: 1rem;
             align-items: center;
         }
+
         /* Past deliveries */
         .past-deliveries {
             background: #fffdf6;
@@ -95,6 +169,7 @@
             padding: 1.5rem;
             margin-top: 2rem;
         }
+
         .past-deliveries h2 {
             font-size: 2.2rem;
             color: #d90429;
@@ -102,10 +177,12 @@
             margin-bottom: 1.5rem;
             text-align: center;
         }
+
         .past-deliveries table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .past-deliveries th {
             background: #f6eddc;
             color: #d90429;
@@ -113,14 +190,17 @@
             padding: 0.8rem;
             border-bottom: 2px solid #333;
         }
+
         .past-deliveries td {
             color: #222;
             padding: 0.8rem;
             border-bottom: 1px solid #ddd;
         }
+
         .past-deliveries tr:hover {
             background: #f6eddc;
         }
+
         /* Error messages */
         .error {
             color: #d90429;
@@ -129,28 +209,35 @@
             margin: 1.5rem 0;
             font-family: 'Roboto', sans-serif;
         }
+
         .error::before {
             content: "⚠️ ";
             font-size: 1.5rem;
         }
+
         /* Responsive adjustments */
         @media (max-width: 992px) {
             .dashboard-section .container {
                 padding: 0 0.5rem;
             }
-            .vaccine-card, .other-card {
+
+            .vaccine-card,
+            .other-card {
                 flex: 1 1 100%;
                 max-width: 90%;
             }
+
             .vaccine-card {
                 grid-template-columns: 1fr;
             }
+
             .map {
                 height: 400px;
             }
         }
     </style>
 </head>
+
 <body>
     <section class="dashboard-section">
         <div class="container">
@@ -166,20 +253,35 @@
             {% endif %}
 
             <p id="noFlyWarning" class="error" style="display:none;"></p> <!--no-fly error-->
-            
+
             <form method="POST" action="/tracking" class="cards">
                 <div class="vaccine-card">
                     {% for vaccine in session.get('vaccines', []) %}
-                    <input type="checkbox" id="vaccine{{ loop.index }}" name="vaccines" value="{{ vaccine.name }}">
-                    <label for="vaccine{{ loop.index }}">
-                        <div class="card">
-                            <h3>{{ vaccine.name }}</h3>
-                            <img src="{{ vaccine.image_url }}" alt="{{ vaccine.name }}">
-                            <p>{{ vaccine.description }}</p>
+                    <div class="card">
+                        <h3>{{ vaccine.name }}</h3>
+                        <img src="{{ vaccine.image_url }}" alt="{{ vaccine.name }}">
+                        <p>{{ vaccine.description }}</p>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <button type="button" onclick="changeCount({{ loop.index }}, 1)"
+                                style="font-size:1.2rem;">+</button>
+                            <input type="number" id="vaccineCount{{ loop.index }}"
+                                name="vaccine_counts_{{ vaccine.name }}" value="0" min="0"
+                                style="width:3rem;text-align:center;" readonly>
+                            <button type="button" onclick="changeCount({{ loop.index }}, -1)"
+                                style="font-size:1.2rem;">-</button>
                         </div>
-                    </label>
+                        <input type="hidden" name="vaccines" value="{{ vaccine.name }}">
+                    </div>
                     {% endfor %}
                 </div>
+                <script>
+                    function changeCount(idx, delta) {
+                        const input = document.getElementById('vaccineCount' + idx);
+                        let val = parseInt(input.value) || 0;
+                        val = Math.max(0, val + delta);
+                        input.value = val;
+                    }
+                </script>
 
                 <div class="other-card">
                     <div id="map" class="map"></div>
@@ -248,75 +350,76 @@
         }).addTo(map);
 
         // Define no-fly zones directly as circles: [centerLat, centerLng, radius]
-  const noFlyZones = [
-    [30.3565, 76.3615, 0.002], // Zone 1
-    [30.3495, 76.3565, 0.002], // Zone 2
-    [30.3465, 76.3665, 0.002], // Zone 3
-    [30.3515, 76.3715, 0.002], // Zone 4
-    [30.34325, 76.36125, 0.0015] // Zone 5
-  ];
+        const noFlyZones = [
+            [30.3565, 76.3615, 0.002], // Zone 1
+            [30.3495, 76.3565, 0.002], // Zone 2
+            [30.3465, 76.3665, 0.002], // Zone 3
+            [30.3515, 76.3715, 0.002], // Zone 4
+            [30.34325, 76.36125, 0.0015] // Zone 5
+        ];
 
-  // Render zones as circles
-  noFlyZones.forEach(([lat, lng, r]) => {
-    L.circle([lat, lng], {
-      radius: r * 111000, // convert approx degrees → meters
-      color: "red",
-      fillColor: "red",
-      fillOpacity: 0.5
-    }).addTo(map);
-  });
+        // Render zones as circles
+        noFlyZones.forEach(([lat, lng, r]) => {
+            L.circle([lat, lng], {
+                radius: r * 111000, // convert approx degrees → meters
+                color: "red",
+                fillColor: "red",
+                fillOpacity: 0.5
+            }).addTo(map);
+        });
 
 
-       
+
         let userMarker;
-    const warningEl = document.getElementById("noFlyWarning");
+        const warningEl = document.getElementById("noFlyWarning");
 
-    function isInNoFlyZone(lat, lng) {
-    for (const [zoneLat, zoneLng, radiusDeg] of noFlyZones) {
-        const distance = Math.sqrt((lat - zoneLat) ** 2 + (lng - zoneLng) ** 2);
-        if (distance <= radiusDeg) return true;
-    }
-    return false;
-}
+        function isInNoFlyZone(lat, lng) {
+            for (const [zoneLat, zoneLng, radiusDeg] of noFlyZones) {
+                const distance = Math.sqrt((lat - zoneLat) ** 2 + (lng - zoneLng) ** 2);
+                if (distance <= radiusDeg) return true;
+            }
+            return false;
+        }
 
-map.on('click', function (e) {
-    const { lat, lng } = e.latlng;
+        map.on('click', function (e) {
+            const { lat, lng } = e.latlng;
 
-    if (userMarker) map.removeLayer(userMarker);
+            if (userMarker) map.removeLayer(userMarker);
 
-    const insideNoFly = isInNoFlyZone(lat, lng);
-    const popupText = insideNoFly
-        ? `⚠️ Selected location is inside a NO-FLY ZONE! (${lat.toFixed(5)}, ${lng.toFixed(5)})`
-        : `Selected: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            const insideNoFly = isInNoFlyZone(lat, lng);
+            const popupText = insideNoFly
+                ? `⚠️ Selected location is inside a NO-FLY ZONE! (${lat.toFixed(5)}, ${lng.toFixed(5)})`
+                : `Selected: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
-    userMarker = L.marker([lat, lng]).addTo(map)
-        .bindPopup(popupText)
-        .openPopup();
+            userMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(popupText)
+                .openPopup();
 
-    document.getElementById("latitude").value = lat.toFixed(5);
-    document.getElementById("longitude").value = lng.toFixed(5);
+            document.getElementById("latitude").value = lat.toFixed(5);
+            document.getElementById("longitude").value = lng.toFixed(5);
 
-    if (insideNoFly) {
-        warningEl.style.display = "block";
-        warningEl.textContent = "⚠️ Warning: You selected a location inside a NO-FLY ZONE! Please pick another location.";
-    } else {
-        warningEl.style.display = "none";
-        warningEl.textContent = "";
-    }
-});
+            if (insideNoFly) {
+                warningEl.style.display = "block";
+                warningEl.textContent = "⚠️ Warning: You selected a location inside a NO-FLY ZONE! Please pick another location.";
+            } else {
+                warningEl.style.display = "none";
+                warningEl.textContent = "";
+            }
+        });
 
-// Prevent form submission if location is in no-fly zone
-document.querySelector("form").addEventListener("submit", function (e) {
-    const lat = parseFloat(document.getElementById("latitude").value);
-    const lng = parseFloat(document.getElementById("longitude").value);
+        // Prevent form submission if location is in no-fly zone
+        document.querySelector("form").addEventListener("submit", function (e) {
+            const lat = parseFloat(document.getElementById("latitude").value);
+            const lng = parseFloat(document.getElementById("longitude").value);
 
-    if (isInNoFlyZone(lat, lng)) {
-        e.preventDefault(); // stop form from going to /tracking
-        warningEl.style.display = "block";
-        warningEl.textContent = "⚠️ Cannot dispatch: selected location is inside a NO-FLY ZONE!";
-    }
-});
+            if (isInNoFlyZone(lat, lng)) {
+                e.preventDefault(); // stop form from going to /tracking
+                warningEl.style.display = "block";
+                warningEl.textContent = "⚠️ Cannot dispatch: selected location is inside a NO-FLY ZONE!";
+            }
+        });
 
     </script>
 </body>
+
 </html>
