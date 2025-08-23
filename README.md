@@ -10,15 +10,16 @@
 ---
 
 ## Project Overview
-The **Drone Dispatch System (DDS)** is a web-based platform designed to simulate autonomous drone delivery of critical medical supplies during emergencies.  
-Developed by *Team Drone Developers (T080)* from Thapar Institute of Engineering & Technology, Patiala.
+The Drone Dispatch System (DDS) is a cutting-edge, web-based platform engineered to redefine emergency medical logistics through autonomous drone technology. Designed to ensure life-saving medical supplies reach the most inaccessible and disaster-struck regions within minutes, DDS leverages intelligent algorithms, real-time tracking, and advanced route optimization for unmatched speed, safety, and reliability.
+
+Built by Team Drone Developers (T080) from Thapar Institute of Engineering & Technology, Patiala, this system represents a powerful leap toward the future of healthcare delivery, where every second counts and technology saves lives.
 
 ---
 
 ## Problem Statement
 <img src="static/photos/solution.jpeg" alt="DDS Hero" width="500">
 
-Despite rapid advances in drone technology, **the potential for emergency medical supply delivery using drones remains largely unexplored and underutilized**.
+Despite major progress in drone technology, its life-saving potential for emergency medical delivery remains largely untapped. Traditional logistics fail in disaster zones and remote areas, causing deadly delays. Existing drone solutions are costly, geographically limited, and lack autonomy, leaving a critical gap for a scalable, intelligent, and rapid-response system.
 
 ---
 
