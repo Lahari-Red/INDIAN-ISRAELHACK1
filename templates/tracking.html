@@ -75,6 +75,7 @@
       color: #16a34a;
     }
   </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
 <body>
@@ -84,18 +85,17 @@
   <section class="hero">
     <div id="map"></div>
     <div id="eta">Calculating ETA...</div>
+    <div id="drone-status-list"></div>
   </section>
   <main class="container">
     <section class="info-box">
       <h2>Delivery Information</h2>
-      <ul>
-        <li><strong>Vaccine Type:</strong> {{ data.vaccine_type if data else '---' }}<br>
-          <strong>Latitude:</strong> {{ data.latitude if data else '---' }}<br>
-          <strong>Longitude:</strong> {{ data.longitude if data else '---' }}<br>
-          <strong>Distance:</strong> {{ data.distance if data else '---' }} km<br>
-          <strong>Access Token:</strong> <span id="serverToken">{{ token if token else '' }}</span>
-        </li>
-      </ul>
+      <strong>Vaccine Type:</strong> {{ ','.join(data.vaccine_types) if data and data.vaccine_types else '---'
+      }}<br>
+      <strong>Latitude:</strong> {{ data.latitude if data else '---' }}<br>
+      <strong>Longitude:</strong> {{ data.longitude if data else '---' }}<br>
+      <strong>Distance:</strong> {{ data.distance if data else '---' }} km<br>
+      <strong>Access Token:</strong> <span id="serverToken">{{ token if token else '' }}</span>
     </section>
 
   </main>
@@ -105,8 +105,8 @@
 <script>
   // ------------------ Setup ------------------
   const homeLat = 30.3529, homeLng = 76.3637;
-  const targetLat = {{ data.latitude|default (30.3529) }},
-  targetLng = {{ data.longitude |default (76.3637) }};
+  const targetLat = parseFloat("{{ data.latitude|default(30.3529) }}");
+  const targetLng = parseFloat("{{ data.longitude|default(76.3637) }}");
 
   const serverToken = document.getElementById("serverToken").innerText.trim() ||
     Math.floor(100000 + Math.random() * 900000).toString(); // fallback token
@@ -272,17 +272,23 @@
 
 
 
-  // ------------------ Animation Helpers ------------------
-  const droneIcon = L.icon({ iconUrl: "static/icons/drone.ico", iconSize: [40, 40], iconAnchor: [20, 20] });
-  const droneMarker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
 
+  // ------------------ Animation Helpers (Multiple Drones) ------------------
+  const droneIcon = L.icon({ iconUrl: "static/icons/drone.ico", iconSize: [40, 40], iconAnchor: [20, 20] });
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
   const durationMs = (distanceMeters / 1000 / 100) * 3600 * 1000; // speed=100 km/h
 
-  function animateDroneAlongPath(path, durationMs, callback) {
+  // Get vaccine types from backend data (already rendered in Delivery Information)
+  const vaccineTypesText = document.querySelector('.info-box').innerText.match(/Vaccine Type:\s*(.*)/);
+  let vaccines = [];
+  if (vaccineTypesText && vaccineTypesText[1]) {
+    vaccines = vaccineTypesText[1].split(',').map(v => v.trim()).filter(v => v);
+  }
+  if (vaccines.length === 0) vaccines = ['VaccineA']; // fallback
+
+  function animateDroneAlongPath(path, durationMs, marker, callback) {
     let segment = 0;
     let startTime = null;
-
     function step(ts) {
       if (!startTime) startTime = ts;
       const totalProgress = Math.min((ts - startTime) / durationMs, 1);
@@ -290,65 +296,76 @@
       const segProgress = totalProgress * totalSegments;
       segment = Math.floor(segProgress);
       const localT = segProgress - segment;
-
       if (segment >= totalSegments) {
-        droneMarker.setLatLng(path[path.length - 1]);
+        marker.setLatLng(path[path.length - 1]);
         if (callback) callback();
         return;
       }
-
       const [p1, p2] = [path[segment], path[segment + 1]];
       const lat = p1[0] + (p2[0] - p1[0]) * localT;
       const lng = p1[1] + (p2[1] - p1[1]) * localT;
-      droneMarker.setLatLng([lat, lng]);
-
+      marker.setLatLng([lat, lng]);
       requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
   }
 
-  // ------------------ Token & Return Logic ------------------
-  function afterArrival() {
-    const etaDiv = document.getElementById("eta");
-    etaDiv.innerHTML = `
-      <form id="tokenForm">
-        <label><strong>Enter Delivery Token:</strong></label>
-        <input type="text" id="deliveryToken" required>
+  // ------------------ Independent Drone Simulation ------------------
+  function afterArrivalParallel(droneIdx, marker) {
+    const statusDiv = document.getElementById(`drone-status-${droneIdx}`);
+    statusDiv.innerHTML = `
+      <form id="tokenForm${droneIdx}">
+        <label><strong>Drone ${droneIdx + 1} (${vaccines[droneIdx]}): Enter Delivery Token:</strong></label>
+        <input type="text" id="deliveryToken${droneIdx}" required>
         <button type="submit">Verify</button>
       </form>
-      <div id="tokenError" style="color:red;margin-top:8px;"></div>
+      <div id="tokenError${droneIdx}" style="color:red;margin-top:8px;"></div>
     `;
 
-    document.getElementById("tokenForm").onsubmit = e => {
+    document.getElementById(`tokenForm${droneIdx}`).onsubmit = e => {
       e.preventDefault();
-      const entered = document.getElementById("deliveryToken").value.trim();
+      const entered = document.getElementById(`deliveryToken${droneIdx}`).value.trim();
       if (entered === serverToken) {
-        etaDiv.innerText = "Landing... Dispatching vaccine...";
+        statusDiv.innerText = `Drone ${droneIdx + 1} Landing... Dispatching ${vaccines[droneIdx]}...`;
         setTimeout(() => {
-          etaDiv.innerText = "Returning to Home Station...";
-          animateDroneAlongPath([...path].reverse(), durationMs, () => {
-            etaDiv.innerText = "Delivered!";
+          statusDiv.innerText = `Drone ${droneIdx + 1} Returning to Home Station...`;
+          animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
+            statusDiv.innerText = `Drone ${droneIdx + 1} Delivered!`;
           });
         }, 2000);
       } else {
-        document.getElementById("tokenError").innerText = "Invalid token! Drone retreating.";
-        animateDroneAlongPath([...path].reverse(), durationMs, () => {
-          etaDiv.innerText = "Delivery Failed: Invalid Token";
+        document.getElementById(`tokenError${droneIdx}`).innerText = "Invalid token! Drone retreating.";
+        animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
+          statusDiv.innerText = `Drone ${droneIdx + 1} Delivery Failed: Invalid Token`;
         });
       }
     };
   }
 
-  // ------------------ Sequence ------------------
-  function startSequence() {
-    document.getElementById("eta").innerText = "Drone Assigned...";
-    setTimeout(() => {
-      document.getElementById("eta").innerText = "Heading to Target...";
-      animateDroneAlongPath(path, durationMs, afterArrival);
-    }, 2000);
+  function startParallelDrones() {
+    const statusList = document.getElementById("drone-status-list");
+    statusList.innerHTML = "";
+    vaccines.forEach((vaccine, i) => {
+      const statusDiv = document.createElement("div");
+      statusDiv.id = `drone-status-${i}`;
+      statusDiv.style.marginBottom = "1em";
+      statusDiv.innerText = `Drone ${i + 1} (${vaccine}) waiting for dispatch...`;
+      statusList.appendChild(statusDiv);
+      setTimeout(() => {
+        statusDiv.innerText = `Drone ${i + 1} (${vaccine}) heading to Target...`;
+        const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
+        marker.bindPopup(`Drone ${i + 1} - ${vaccine}`).openPopup();
+        animateDroneAlongPath(path, durationMs, marker, () => {
+          afterArrivalParallel(i, marker);
+        });
+      }, i * 13000);
+    });
   }
 
-  startSequence();
+  setTimeout(startParallelDrones, 2000); // Initial delay before first drone
+
+
+
 </script>
 
 </html>
