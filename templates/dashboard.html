@@ -166,7 +166,58 @@
         tr:last-child td {
             border-bottom: none;
         }
+        #add-drone.admin-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 28px 24px;
+            box-shadow: 0 2px 12px rgba(217, 4, 41, 0.05);
+            margin-bottom: 40px;
+        }
 
+        #add-drone h3 {
+            color: #d90429;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        #add-drone form {
+            background: #fff;
+            border-radius: 10px;
+            padding: 24px 18px;
+            box-shadow: 0 1px 8px rgba(217, 4, 41, 0.04);
+        }
+
+        #add-drone label {
+            display: block;
+            margin-bottom: 6px;
+            color: #222;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        #add-drone input[type="text"],
+        #add-drone input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1em;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+            transition: border 0.2s;
+        }
+
+        #add-drone input[type="text"]:focus,
+        #add-drone input[type="number"]:focus {
+            border-color: #d90429;
+            outline: none;
+        }
+
+        #add-drone .btn {
+            margin-top: 12px;
+            width: 100%;
+        }
         .action-btn,
         .btn {
             background-color: #d90429;
@@ -230,6 +281,8 @@
             font-size: 1em;
             border-top: 1px solid #e9ecef;
         }
+        
+        
     </style>
 </head>
 
@@ -361,33 +414,80 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Serial Number</th>
+                        <th>Model</th>
+                        <th>Manufacturer</th>
                         <th>Status</th>
-                        <th>Location</th>
                         <th>Battery</th>
+                        <th>Location</th>
+                        <th>Max Payload (kg)</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for drone in drones %}
                     <tr>
-                        <td>{{ drone.id }}</td>
-                        <td>{{ drone.status }}</td>
-                        <td>{{ drone.location }}</td>
-                        <td>{{ drone.battery }}%</td>
+                        <td>{{ drone.SerialNumber }}</td>
+                        <td>{{ drone.Model }}</td>
+                        <td>{{ drone.Manufacturer }}</td>
+                        <td>{{ drone.Status }}</td>
+                        <td>{{ drone.BatteryLevel }}%</td>
+                        <td>{{ drone.Location }}</td>
+                        <td>{{ drone.MaxPayloadKg }}</td>
+                        <td>{{ drone.CreatedAt }}</td>
+                        <td>{{ drone.UpdatedAt }}</td>
                         <td>
-                            <button class="action-btn" onclick="viewDrone('{{ drone.id }}')">View</button>
-                            <button class="action-btn" onclick="removeDrone('{{ drone.id }}')">Remove</button>
+                            <form action="/admin_dashboard/delete_drone/{{ drone.DroneID }}" method="POST"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn"
+                                    onclick="return confirm('Remove this drone?');">Remove</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
                     {% if drones|length == 0 %}
                     <tr>
-                        <td colspan="5" style="text-align:center;">No drones available</td>
+                        <td colspan="11" style="text-align:center;">No drones available</td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
+        </section>
+        <section id="add-drone" class="admin-section">
+            <h3>Add New Drone</h3>
+            <form action="/admin_dashboard/add_drone" method="POST" style="max-width:600px;">
+                <div style="margin-bottom:12px;">
+                    <label for="serial_number" style="font-weight:600;">Serial Number</label>
+                    <input type="text" id="serial_number" name="serial_number" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="model" style="font-weight:600;">Model</label>
+                    <input type="text" id="model" name="model" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="manufacturer" style="font-weight:600;">Manufacturer</label>
+                    <input type="text" id="manufacturer" name="manufacturer" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="status" style="font-weight:600;">Status</label>
+                    <input type="text" id="status" name="status" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="battery_level" style="font-weight:600;">Battery Level (%)</label>
+                    <input type="number" id="battery_level" name="battery_level" min="0" max="100" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="location" style="font-weight:600;">Location</label>
+                    <input type="text" id="location" name="location" required>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label for="max_payload_kg" style="font-weight:600;">Max Payload (kg)</label>
+                    <input type="number" id="max_payload_kg" name="max_payload_kg" min="0" step="0.01" required>
+                </div>
+                <button type="submit" class="btn">Add Drone</button>
+            </form>
         </section>
 
         <section id="deliveries" class="admin-section">
