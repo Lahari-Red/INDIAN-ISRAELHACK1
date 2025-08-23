@@ -188,28 +188,14 @@
   const homeLat = 30.3529, homeLng = 76.3637;
   const targetLat = parseFloat("{{ data.latitude|default(30.3529) }}");
   const targetLng = parseFloat("{{ data.longitude|default(76.3637) }}");
-const data = {
+  const data = {
   distance: parseFloat("{{ data.distance }}"),  // meters
   latitude: targetLat,
   longitude: targetLng
   };
+
   const serverToken = document.getElementById("serverToken").innerText.trim() ||
     Math.floor(100000 + Math.random() * 900000).toString(); // fallback token
-
-    function calculateBatteryPercentage(traveledMeters, maxDistanceMeters = 27000) {
-  if (traveledMeters <= 0) return 100;
-  if (traveledMeters >= maxDistanceMeters) return 0;
-  return Math.round((1 - traveledMeters / maxDistanceMeters) * 100);
-}
-function distanceBetweenPoints(p1, p2) {
-  const R = 6371000; // Earth radius in meters
-  const toRad = deg => deg * Math.PI / 180;
-  const lat1 = toRad(p1[0]), lat2 = toRad(p2);
-  const dLat = toRad(p2 - p1), dLng = toRad(p2[9] - p1[9]);
-  const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
 
   const map = L.map('map').setView([homeLat, homeLng], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
@@ -237,7 +223,9 @@ function distanceBetweenPoints(p1, p2) {
     }).addTo(map);
   });
 
-
+// Center point
+var center = {lat: 30.3529, lng: 76.3637};
+var radius = 8500; // 8.5km in meters
 
 // Calculate point function (same as before)
 // Center point
@@ -292,7 +280,6 @@ safeZones.forEach(function(coord, index) {
 const safeZoneCoords = safeZones.slice();
 console.log("Safe Zone Coordinates:", safeZoneCoords);
 
-
 L.circle([30.3529, 76.3637], {
             radius: 15000,
             color: "blue",
@@ -300,13 +287,12 @@ L.circle([30.3529, 76.3637], {
             fillOpacity: 0.10
         }).addTo(map);
 
-// Adjust yellow circle radius for visibility and ensure it's after map init
-L.circle([30.3529, 76.3637], {
-    radius: 25000,
-    color: "yellow",
-    fillColor: "yellow",
-    fillOpacity: 0.2
-}).addTo(map);
+        L.circle([30.3529, 76.3637], {
+            radius: 25000,
+            color: "yellow",
+            fillColor: "yellow",
+            fillOpacity: 0.10
+        }).addTo(map);
       
   // ------------------ Check if destination is inside a no-fly zone ------------------
   function isPointInsideNoFlyZones(point, zones) {
@@ -322,11 +308,10 @@ L.circle([30.3529, 76.3637], {
     return false;
   }
 
-   // ------------------ Path Calculation ------------------
+  // ------------------ Path Calculation ------------------
   function computeSafePath(start, end, zones) {
     const path = [start];
     let current = start;
-
     // helper: check if line intersects circle
     function lineIntersectsCircle(p1, p2, center, r) {
       const [x1, y1] = [p1[1], p1[0]];
@@ -336,15 +321,15 @@ L.circle([30.3529, 76.3637], {
       const dx = x2 - x1, dy = y2 - y1;
       const fx = x1 - cx, fy = y1 - cy;
 
-      const a = dx*dx + dy*dy;
-      const b = 2 * (fx*dx + fy*dy);
-      const c = (fx*fx + fy*fy) - r*r;
+      const a = dx * dx + dy * dy;
+      const b = 2 * (fx * dx + fy * dy);
+      const c = (fx * fx + fy * fy) - r * r;
 
-      let disc = b*b - 4*a*c;
+      let disc = b * b - 4 * a * c;
       if (disc < 0) return false;
       disc = Math.sqrt(disc);
-      const t1 = (-b - disc) / (2*a);
-      const t2 = (-b + disc) / (2*a);
+      const t1 = (-b - disc) / (2 * a);
+      const t2 = (-b + disc) / (2 * a);
 
       return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
     }
@@ -364,7 +349,7 @@ L.circle([30.3529, 76.3637], {
 
           // try two tangent detours
           const tangentCandidates = [];
-          [ Math.PI/2, -Math.PI/2 ].forEach(offset => {
+          [Math.PI / 2, -Math.PI / 2].forEach(offset => {
             const angle = baseAngle + offset;
             tangentCandidates.push([
               cLat + (radius + 0.0005) * Math.sin(angle), // <-- added margin
@@ -396,8 +381,8 @@ L.circle([30.3529, 76.3637], {
             let tries = 0;
             while (tries < 50) {
               cand = [
-                cLat + (radius + 0.0005 * (tries+1)) * Math.sin(baseAngle + Math.PI/2),
-                cLng + (radius + 0.0005 * (tries+1)) * Math.cos(baseAngle + Math.PI/2)
+                cLat + (radius + 0.0005 * (tries + 1)) * Math.sin(baseAngle + Math.PI / 2),
+                cLng + (radius + 0.0005 * (tries + 1)) * Math.cos(baseAngle + Math.PI / 2)
               ];
               // check if cand→end is safe...
               let ok = true;
@@ -430,7 +415,6 @@ L.circle([30.3529, 76.3637], {
     return path;
   }
 
-
 var legend = L.control({position: 'topright'});
 legend.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend');
@@ -458,7 +442,7 @@ legend.addTo(map);
     L.polyline(path, { color: 'blue', weight: 4 }).addTo(map);
   }
 
-// After safeZones and safeZoneCoordsList are created
+  // After safeZones and safeZoneCoordsList are created
 console.log("Safe Zone Coordinates:", safeZoneCoords);
 dest = [targetLat, targetLng];
 // ----------------- Nearest Safe Zone Finder -----------------
@@ -527,7 +511,7 @@ L.polyline(retreatPath, {
   // ------------------ Animation Helpers (Multiple Drones) ------------------
   const droneIcon = L.icon({ iconUrl: "static/icons/drone.ico", iconSize: [40, 40], iconAnchor: [20, 20] });
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
-  const durationMs = (distanceMeters / 1000 / 100) * 3600 * 1000; // speed=100 km/h
+  const durationMs = (distanceMeters / 1000 / 10000) * 3600 * 1000; // speed=100 km/h
 
   // Get vaccine counts from Delivery Information
   const vaccineInfoText = document.querySelector('.info-box').innerText.match(/Vaccine\s*:\s*([\s\S]*?)Latitude:/);
@@ -549,89 +533,41 @@ L.polyline(retreatPath, {
   if (vaccines.length === 0) vaccines = ['VaccineA']; // fallback
 
 function animateDroneAlongPath(path, durationMs, marker, callback, etaCallback) {
-  let segment = 0;
-  let startTime = null;
-
-  // Helper to calculate distance between two lat-lng points in meters
-  function distanceBetweenPoints(p1, p2) {
-    const R = 6371000; // Earth radius in meters
-    const toRad = deg => deg * Math.PI / 180;
-    const lat1 = toRad(p1[0]), lat2 = toRad(p2);
-    const dLat = toRad(p2 - p1);
-    const dLng = toRad(p2[8] - p1[8]);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  // Battery percentage calculator
-  function calculateBatteryPercentage(traveledMeters, maxDistanceMeters = 27000) {
-    if (traveledMeters <= 0) return 100;
-    if (traveledMeters >= maxDistanceMeters) return 0;
-    return Math.round((1 - traveledMeters / maxDistanceMeters) * 100);
-  }
-function step(ts) {
-  if (!startTime) startTime = ts;
-  const totalProgress = Math.min((ts - startTime) / durationMs, 1);
-
-  // Calculate total distance traveled so far
-  let traveledDistance = 0;
-
-  // Sum distances of fully completed segments
-  for (let i = 0; i < segment; i++) {
-    traveledDistance += distanceBetweenPoints(path[i], path[i + 1]);
-  }
-
-  // Add partial distance on current segment
-  if (segment < path.length - 1) {
-    const [p1, p2] = [path[segment], path[segment + 1]];
-    const segProgress = totalProgress * (path.length - 1);
-    const partialProgress = segProgress - segment; // fractional progress on current segment
-    const interpolatedPoint = [
-      p1[0] + (p2 - p1) * partialProgress,
-      p1[9] + (p2[9] - p1[9]) * partialProgress
-    ];
-    traveledDistance += distanceBetweenPoints(p1, interpolatedPoint);
-  }
-
-  // Calculate battery percentage based on distance traveled
-  const batteryPercent = calculateBatteryPercentage(traveledDistance);
-
-  // ETA calculation
-  const elapsed = ts - startTime;
-  const remainingTime = durationMs - elapsed;
-  const etaSeconds = Math.max(0, Math.ceil(remainingTime / 1000));
-  let etaString = etaSeconds > 0
-    ? (Math.floor(etaSeconds / 60) > 0
-        ? `${Math.floor(etaSeconds / 60)}m ${etaSeconds % 60}s`
-        : `${etaSeconds}s`)
-    : "Arrived";
-
-  // Update ETA and battery display via callback
-  if (etaCallback) {
-    etaCallback(etaString, batteryPercent);
-  }
-
-  // Update drone marker position on the map
-  const totalSegments = path.length - 1;
-  const segProgress = totalProgress * totalSegments;
-  segment = Math.floor(segProgress);
-
-  if (segment >= totalSegments) {
-    marker.setLatLng(path[path.length - 1]);
-    if (callback) callback();
-    return;
-  }
-
-  const [p1, p2] = [path[segment], path[segment + 1]];
-  const localT = segProgress - segment;
-  const lat = p1[0] + (p2 - p1) * localT;
-  const lng = p1[9] + (p2[9] - p1[9]) * localT;
-  marker.setLatLng([lat, lng]);
-
-  requestAnimationFrame(step);
+    let segment = 0;
+    let startTime = null;
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      const totalProgress = Math.min((ts - startTime) / durationMs, 1);
+      
+      // Add ETA calculation
+      const elapsed = ts - startTime;
+      const remainingTime = durationMs - elapsed;
+      const etaSeconds = Math.max(0, Math.ceil(remainingTime / 1000));
+      if (etaCallback && etaSeconds > 0) {
+        const minutes = Math.floor(etaSeconds / 60);
+        const seconds = etaSeconds % 60;
+        etaCallback(minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`);
+      } else if (etaCallback && etaSeconds === 0) {
+        etaCallback("Arrived");
+      }
+      
+      const totalSegments = path.length - 1;
+      const segProgress = totalProgress * totalSegments;
+      segment = Math.floor(segProgress);
+      const localT = segProgress - segment;
+      if (segment >= totalSegments) {
+        marker.setLatLng(path[path.length - 1]);
+        if (callback) callback();
+        return;
+      }
+      const [p1, p2] = [path[segment], path[segment + 1]];
+      const lat = p1[0] + (p2[0] - p1[0]) * localT;
+      const lng = p1[1] + (p2[1] - p1[1]) * localT;
+      marker.setLatLng([lat, lng]);
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
 }
-
 
   // ------------------ Independent Drone Simulation ------------------
   // Batch token verification for all arrived drones
@@ -664,7 +600,7 @@ function step(ts) {
             document.getElementById(`drone-status-msg-${idx}`).innerText = `Landing... Dispatching ${vaccines[idx]}...`;
             setTimeout(() => {
               document.getElementById(`drone-status-msg-${idx}`).innerText = `Returning to Home Station...`;
-              animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
+              animateDroneAlongPath(retreatPath, durationMs, marker, () => {
                 document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivered!`;
               }, (etaSec) => {
                 document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
@@ -677,7 +613,7 @@ function step(ts) {
         } else {
           document.getElementById("tokenErrorBatch").innerText = "Invalid token! All arrived drones retreating.";
           arrivedDrones.forEach(({ idx, marker }) => {
-            animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
+            animateDroneAlongPath(retreatPath, durationMs, marker, () => {
               document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivery Failed: Invalid Token`;
             }, (etaSec) => {
               document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
@@ -698,24 +634,18 @@ function step(ts) {
       const statusDiv = document.createElement("div");
       statusDiv.id = `drone-status-${i}`;
       statusDiv.className = "drone-status-box";
-       statusDiv.innerHTML = `
-      <strong>Drone ${i + 1} (${vaccine})</strong>
-      <div class="drone-battery" id="drone-battery-${i}">Battery: 100%</div>
-      <div class="drone-eta" id="drone-eta-${i}">ETA: --</div>
-      <div class="drone-status-msg" id="drone-status-msg-${i}">Waiting for dispatch...</div>
-    `;
+      statusDiv.innerHTML = `<strong>Drone ${i + 1} (${vaccine})</strong><div class="drone-eta" id="drone-eta-${i}">ETA: --</div><div class="drone-status-msg" id="drone-status-msg-${i}">Waiting for dispatch...</div>`;
       statusList.appendChild(statusDiv);
       setTimeout(() => {
         document.getElementById(`drone-status-msg-${i}`).innerText = `Heading to Target...`;
         const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
         animateDroneAlongPath(
-          retreatPath,
+          path,
           durationMs,
           marker,
           () => { afterArrivalParallel(i, marker); },
           (etaSec) => {
             document.getElementById(`drone-eta-${i}`).innerText = `ETA: ${etaSec}s`;
-            document.getElementById(`drone-battery-${i}`).innerText = `Battery: ${batteryPercent}%`;
           }
         );
       }, i * 4320);//drones between delay
