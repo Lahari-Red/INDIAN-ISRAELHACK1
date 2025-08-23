@@ -263,12 +263,12 @@ def tracking():
                 if not conn:
                     return jsonify({"error": "DB connection failed"})
                 cursor= conn.cursor()
-                cursor.execute("SELECT * FROM drones")
+                cursor.execute("SELECT * FROM drones where status='available' or status='Available'")
                 drones = cursor.fetchall()
                 cursor.close()
                 conn.close()
-                data["drone_count"] = len(drones)-3
-            return render_template("tracking.html", data=data,token=token,max_drone=len(drones)-3)
+                data["drone_count"] = len(drones)
+            return render_template("tracking.html", data=data,token=token,max_drone=len(drones))
     return render_template('tracking.html')
 
 
