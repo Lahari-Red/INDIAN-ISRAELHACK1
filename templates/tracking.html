@@ -168,6 +168,7 @@
   </style>
   </section>
   <main class="container">
+    {{data}}
     <section class="info-box">
       <h2>Delivery Information</h2>
       <strong>Vaccine :</strong>
@@ -369,24 +370,10 @@
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
   const durationMs = (distanceMeters / 1000 / 100) * 3600 * 1000; // speed=100 km/h
 
-  // Get vaccine counts from Delivery Information
-  const vaccineInfoText = document.querySelector('.info-box').innerText.match(/Vaccine\s*:\s*([\s\S]*?)Latitude:/);
-  let vaccines = [];
-  if (vaccineInfoText && vaccineInfoText[1]) {
-    // Example: "Covaxin: 3, Covishield: 4"
-    const entries = vaccineInfoText[1].split(',').map(e => e.trim()).filter(e => e);
-    entries.forEach(entry => {
-      const parts = entry.split(':');
-      if (parts.length === 2) {
-        const name = parts[0].trim();
-        const count = parseInt(parts[1].trim());
-        for (let i = 0; i < count; i++) {
-          vaccines.push(name);
-        }
-      }
-    });
-  }
-  if (vaccines.length === 0) vaccines = ['VaccineA']; // fallback
+  // Get vaccine queue and max_drone from backend
+  let vaccines = {{ data.vaccine_queue| tojson |default ('[]') }};
+  let maxDrone = {{ max_drone|default (1) }};
+  if (!Array.isArray(vaccines) || vaccines.length === 0) vaccines = ['VaccineA'];
 
   function animateDroneAlongPath(path, durationMs, marker, callback, etaCallback) {
     let segment = 0;
@@ -403,6 +390,10 @@
         marker.setLatLng(path[path.length - 1]);
         if (etaCallback) etaCallback(0);
         if (callback) callback();
+        // Hide marker ONLY if returning to home station
+        if (path[path.length - 1][0] === homeLat && path[path.length - 1][1] === homeLng) {
+          marker.remove();
+        }
         return;
       }
       const [p1, p2] = [path[segment], path[segment + 1]];
@@ -480,35 +471,75 @@
     }
   }
 
-  function startParallelDrones() {
-    const statusList = document.getElementById("drone-status-list");
-    statusList.innerHTML = "";
-    vaccines.forEach((vaccine, i) => {
-      const statusDiv = document.createElement("div");
-      statusDiv.id = `drone-status-${i}`;
-      statusDiv.className = "drone-status-box";
-      statusDiv.innerHTML = `<strong>Drone ${i + 1} (${vaccine})</strong><div class="drone-eta" id="drone-eta-${i}">ETA: --</div><div class="drone-status-msg" id="drone-status-msg-${i}">Waiting for dispatch...</div>`;
-      statusList.appendChild(statusDiv);
-      setTimeout(() => {
-        document.getElementById(`drone-status-msg-${i}`).innerText = `Heading to Target...`;
-        const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
-        marker.bindPopup(`Drone ${i + 1} - ${vaccine}`).openPopup();
-        animateDroneAlongPath(
-          path,
-          durationMs,
-          marker,
-          () => { afterArrivalParallel(i, marker); },
-          (etaSec) => {
-            const min = Math.floor(etaSec / 60);
-            const sec = etaSec % 60;
-            document.getElementById(`drone-eta-${i}`).innerText = `ETA: ${min}m ${sec}s`;
-          }
-        );
-      }, i * 4320);
-    });
+  // --- Dynamic drone dispatch logic ---
+  let activeDrones = 0;
+  let nextVaccineIdx = 0;
+  const statusList = document.getElementById("drone-status-list");
+  statusList.innerHTML = "";
+  function dispatchDrone(idx, delayMs = 1000) {
+    const vaccine = vaccines[idx];
+    const statusDiv = document.createElement("div");
+    statusDiv.id = `drone-status-${idx}`;
+    statusDiv.className = "drone-status-box";
+    statusDiv.innerHTML = `<strong>Drone ${idx + 1} (${vaccine})</strong><div class=\"drone-eta\" id=\"drone-eta-${idx}\">ETA: --</div><div class=\"drone-status-msg\" id=\"drone-status-msg-${idx}\">Waiting for dispatch...</div>`;
+    statusList.appendChild(statusDiv);
+    setTimeout(() => {
+      document.getElementById(`drone-status-msg-${idx}`).innerText = `Heading to Target...`;
+      const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
+      marker.bindPopup(`Drone ${idx + 1} - ${vaccine}`).openPopup();
+      animateDroneAlongPath(
+        path,
+        durationMs,
+        marker,
+        () => { afterArrivalParallel(idx, marker); },
+        (etaSec) => {
+          const min = Math.floor(etaSec / 60);
+          const sec = etaSec % 60;
+          document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${min}m ${sec}s`;
+        }
+      );
+    }, delayMs);
+    activeDrones++;
   }
 
-  setTimeout(startParallelDrones, 2000); // Initial delay before first drone
+  function tryDispatchMore() {
+    // For initial batch, dispatch up to maxDrone
+    if (nextVaccineIdx < vaccines.length) {
+      let batchCount = 0;
+      while (batchCount < maxDrone && nextVaccineIdx < vaccines.length) {
+        dispatchDrone(nextVaccineIdx, batchCount * 10000);
+        nextVaccineIdx++;
+        batchCount++;
+      }
+    }
+  }
+
+  // Patch afterArrivalParallel to dispatch next drone when one returns
+  const originalAfterArrivalParallel = afterArrivalParallel;
+  afterArrivalParallel = function (droneIdx, marker) {
+    // Only decrement activeDrones and try dispatch after drone returns home
+    let statusMsg = document.getElementById(`drone-status-msg-${droneIdx}`);
+    let observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (mutation.type === 'childList') {
+          const msg = statusMsg.innerText;
+          if (msg.includes('Delivered') || msg.includes('Delivery Failed')) {
+            activeDrones--;
+            observer.disconnect();
+            // Only dispatch one more drone if any remain
+            if (nextVaccineIdx < vaccines.length) {
+              dispatchDrone(nextVaccineIdx, 10000);
+              nextVaccineIdx++;
+            }
+          }
+        }
+      });
+    });
+    observer.observe(statusMsg, { childList: true });
+    originalAfterArrivalParallel(droneIdx, marker);
+  };
+
+  setTimeout(tryDispatchMore, 2000);
 
 
 
