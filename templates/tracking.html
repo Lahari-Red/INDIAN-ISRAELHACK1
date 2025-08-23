@@ -41,14 +41,6 @@
       height: 400px;
       border-radius: 16px;
     }
-
-    #eta {
-      margin-top: 1rem;
-      font-size: 1.2rem;
-      color: #2563eb;
-      font-weight: bold;
-    }
-
     .container {
       max-width: 1200px;
       margin: 2rem auto;
@@ -75,7 +67,6 @@
       color: #16a34a;
     }
   </style>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
 <body>
@@ -84,7 +75,6 @@
   </header>
   <section class="hero">
     <div id="map"></div>
-    <div id="batch-token-anchor"></div>
     <div id="drone-status-list"></div>
   </section>
   <style>
@@ -168,7 +158,6 @@
   </style>
   </section>
   <main class="container">
-    {{data}}
     <section class="info-box">
       <h2>Delivery Information</h2>
       <strong>Vaccine :</strong>
@@ -199,9 +188,28 @@
   const homeLat = 30.3529, homeLng = 76.3637;
   const targetLat = parseFloat("{{ data.latitude|default(30.3529) }}");
   const targetLng = parseFloat("{{ data.longitude|default(76.3637) }}");
-
+const data = {
+  distance: parseFloat("{{ data.distance }}"),  // meters
+  latitude: targetLat,
+  longitude: targetLng
+  };
   const serverToken = document.getElementById("serverToken").innerText.trim() ||
     Math.floor(100000 + Math.random() * 900000).toString(); // fallback token
+
+    function calculateBatteryPercentage(traveledMeters, maxDistanceMeters = 27000) {
+  if (traveledMeters <= 0) return 100;
+  if (traveledMeters >= maxDistanceMeters) return 0;
+  return Math.round((1 - traveledMeters / maxDistanceMeters) * 100);
+}
+function distanceBetweenPoints(p1, p2) {
+  const R = 6371000; // Earth radius in meters
+  const toRad = deg => deg * Math.PI / 180;
+  const lat1 = toRad(p1[0]), lat2 = toRad(p2);
+  const dLat = toRad(p2 - p1), dLng = toRad(p2[9] - p1[9]);
+  const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
   const map = L.map('map').setView([homeLat, homeLng], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
@@ -230,6 +238,76 @@
   });
 
 
+
+// Calculate point function (same as before)
+// Center point
+var center = {lat: 30.3529, lng: 76.3637};
+var radius = 23000; // 23km in meters
+
+// Calculate point function (same as before)
+function calculatePoint(center, distance, bearing) {
+   var R = 6371000; // Earth's radius in meters
+   var φ1 = center.lat * Math.PI / 180;
+   var λ1 = center.lng * Math.PI / 180;
+   var brng = bearing * Math.PI / 180;
+   
+   var φ2 = Math.asin(Math.sin(φ1) * Math.cos(distance/R) +
+                     Math.cos(φ1) * Math.sin(distance/R) * Math.cos(brng));
+   var λ2 = λ1 + Math.atan2(Math.sin(brng) * Math.sin(distance/R) * Math.cos(φ1),
+                           Math.cos(distance/R) - Math.sin(φ1) * Math.sin(φ2));
+   
+   return {
+       lat: φ2 * 180 / Math.PI,
+       lng: λ2 * 180 / Math.PI
+   };
+}
+
+// 8 main directions (every 45 degrees)
+var directions = [0, 45, 90, 135];
+var safeZones = [];
+
+// For each direction, create 2 circles on opposite sides
+directions.forEach(function(bearing) {
+   // First circle at bearing direction
+   var point1 = calculatePoint(center, radius, bearing);
+   safeZones.push([point1.lat, point1.lng]);
+   
+   // Second circle at opposite direction (bearing + 180)
+   var oppositeBearing = (bearing + 180) % 360;
+   var point2 = calculatePoint(center, radius, oppositeBearing);
+   safeZones.push([point2.lat, point2.lng]);
+});
+
+// Add circles to map
+safeZones.forEach(function(coord, index) {
+   L.circle(coord, {
+       radius: 500,        // Small circle radius
+       color: "green",
+       fillColor: "green",
+       fillOpacity: 0.3,
+       weight: 2
+   }).addTo(map);
+});
+
+const safeZoneCoords = safeZones.slice();
+console.log("Safe Zone Coordinates:", safeZoneCoords);
+
+
+L.circle([30.3529, 76.3637], {
+            radius: 15000,
+            color: "blue",
+            fillColor: "blue",
+            fillOpacity: 0.10
+        }).addTo(map);
+
+// Adjust yellow circle radius for visibility and ensure it's after map init
+L.circle([30.3529, 76.3637], {
+    radius: 25000,
+    color: "yellow",
+    fillColor: "yellow",
+    fillOpacity: 0.2
+}).addTo(map);
+      
   // ------------------ Check if destination is inside a no-fly zone ------------------
   function isPointInsideNoFlyZones(point, zones) {
     const [lat, lng] = point;
@@ -244,10 +322,11 @@
     return false;
   }
 
-  // ------------------ Path Calculation ------------------
+   // ------------------ Path Calculation ------------------
   function computeSafePath(start, end, zones) {
     const path = [start];
     let current = start;
+
     // helper: check if line intersects circle
     function lineIntersectsCircle(p1, p2, center, r) {
       const [x1, y1] = [p1[1], p1[0]];
@@ -257,15 +336,15 @@
       const dx = x2 - x1, dy = y2 - y1;
       const fx = x1 - cx, fy = y1 - cy;
 
-      const a = dx * dx + dy * dy;
-      const b = 2 * (fx * dx + fy * dy);
-      const c = (fx * fx + fy * fy) - r * r;
+      const a = dx*dx + dy*dy;
+      const b = 2 * (fx*dx + fy*dy);
+      const c = (fx*fx + fy*fy) - r*r;
 
-      let disc = b * b - 4 * a * c;
+      let disc = b*b - 4*a*c;
       if (disc < 0) return false;
       disc = Math.sqrt(disc);
-      const t1 = (-b - disc) / (2 * a);
-      const t2 = (-b + disc) / (2 * a);
+      const t1 = (-b - disc) / (2*a);
+      const t2 = (-b + disc) / (2*a);
 
       return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
     }
@@ -285,7 +364,7 @@
 
           // try two tangent detours
           const tangentCandidates = [];
-          [Math.PI / 2, -Math.PI / 2].forEach(offset => {
+          [ Math.PI/2, -Math.PI/2 ].forEach(offset => {
             const angle = baseAngle + offset;
             tangentCandidates.push([
               cLat + (radius + 0.0005) * Math.sin(angle), // <-- added margin
@@ -317,8 +396,8 @@
             let tries = 0;
             while (tries < 50) {
               cand = [
-                cLat + (radius + 0.0005 * (tries + 1)) * Math.sin(baseAngle + Math.PI / 2),
-                cLng + (radius + 0.0005 * (tries + 1)) * Math.cos(baseAngle + Math.PI / 2)
+                cLat + (radius + 0.0005 * (tries+1)) * Math.sin(baseAngle + Math.PI/2),
+                cLng + (radius + 0.0005 * (tries+1)) * Math.cos(baseAngle + Math.PI/2)
               ];
               // check if cand→end is safe...
               let ok = true;
@@ -352,6 +431,23 @@
   }
 
 
+var legend = L.control({position: 'topright'});
+legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info legend');
+    div.style.backgroundColor = '#f0f0f0'; // Greyish background color
+    div.style.padding = '10px';
+    div.style.borderRadius = '5px';
+    div.style.border = '3px solid #ccc'; // Added a light grey border
+    div.style.lineHeight = '20px'; // Adjust line height for better spacing
+    div.innerHTML = '<h4>Map Legend</h4>' +
+        '<i style="background: red; width: 18px; height: 18px; float: left; margin-right: 8px; border-radius: 50%;"></i> No-Fly Zone<br>' + // Circle
+        '<i style="background: yellow; width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.5; border-radius: 50%;"></i> Delivery Range<br>' + // Circle
+        '<i style="background: blue; width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.5; border-radius: 50%;"></i> Inner Range<br>'+ // Circle
+        '<i style="background:green; width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.5; border-radius: 50%;"></i> Outer Range<br>';
+    return div;
+};
+legend.addTo(map);
+
   // ------------------ Draw Path ------------------
   let path = [];  // declare globally
 
@@ -362,7 +458,70 @@
     L.polyline(path, { color: 'blue', weight: 4 }).addTo(map);
   }
 
+// After safeZones and safeZoneCoordsList are created
+console.log("Safe Zone Coordinates:", safeZoneCoords);
+dest = [targetLat, targetLng];
+// ----------------- Nearest Safe Zone Finder -----------------
+function haversineDistance(coord1, coord2) {
+    const R = 6371e3; // Earth radius in meters
+    const toRad = x => x * Math.PI / 180;
 
+    const lat1 = coord1[0], lon1 = coord1[1];
+    const lat2 = coord2[0], lon2 = coord2[1];
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // distance in meters
+}
+
+function findNearestSafeZone(destCoord, safeZoneCoords) {
+    let minDist = Infinity;
+    let minCoord = null;
+
+    safeZoneCoords.forEach(coord => {
+        const dist = haversineDistance(destCoord, coord);
+        if (dist < minDist) {
+            minDist = dist;
+            minCoord = coord;
+        }
+    });
+
+    return minCoord;
+}
+
+let min_sf_coord = findNearestSafeZone(dest, safeZoneCoords);
+console.log("Nearest Safe Zone:", min_sf_coord);
+
+
+// ---------------- Retreat Path Decision ----------------
+function decideRetreatPath(data, dest, min_sf_coord, path, computeSafePath) {
+  let retreatPath;
+  if (data.distance > 15) {
+    // Too far to go back to source, go to nearest safe zone
+    retreatPath = computeSafePath(dest, min_sf_coord, noFlyZones);
+  } else {
+    // Safe to go back home along the original path
+    retreatPath = [...path].reverse();
+  }
+
+  return retreatPath;
+}
+
+const retreatPath = decideRetreatPath(data, dest, min_sf_coord, path, computeSafePath);
+console.log("Retreat path:", retreatPath);
+L.polyline(retreatPath, {
+  color: "green",
+  weight: 4,
+  opacity: 0.7,
+  dashArray: "5, 10"
+}).addTo(map);
 
 
   // ------------------ Animation Helpers (Multiple Drones) ------------------
@@ -370,44 +529,109 @@
   const distanceMeters = map.distance([homeLat, homeLng], [targetLat, targetLng]);
   const durationMs = (distanceMeters / 1000 / 100) * 3600 * 1000; // speed=100 km/h
 
-  // Get vaccine queue and max_drone from backend
-  let vaccines = {{ data.vaccine_queue| tojson |default ('[]') }};
-  let maxDrone = {{ max_drone|default (1) }};
-  if (!Array.isArray(vaccines) || vaccines.length === 0) vaccines = ['VaccineA'];
-
-  function animateDroneAlongPath(path, durationMs, marker, callback, etaCallback) {
-    let segment = 0;
-    let startTime = null;
-    function step(ts) {
-      if (!startTime) startTime = ts;
-      const elapsed = ts - startTime;
-      const totalProgress = Math.min(elapsed / durationMs, 1);
-      const totalSegments = path.length - 1;
-      const segProgress = totalProgress * totalSegments;
-      segment = Math.floor(segProgress);
-      const localT = segProgress - segment;
-      if (segment >= totalSegments) {
-        marker.setLatLng(path[path.length - 1]);
-        if (etaCallback) etaCallback(0);
-        if (callback) callback();
-        // Hide marker ONLY if returning to home station
-        if (path[path.length - 1][0] === homeLat && path[path.length - 1][1] === homeLng) {
-          marker.remove();
+  // Get vaccine counts from Delivery Information
+  const vaccineInfoText = document.querySelector('.info-box').innerText.match(/Vaccine\s*:\s*([\s\S]*?)Latitude:/);
+  let vaccines = [];
+  if (vaccineInfoText && vaccineInfoText[1]) {
+    // Example: "Covaxin: 3, Covishield: 4"
+    const entries = vaccineInfoText[1].split(',').map(e => e.trim()).filter(e => e);
+    entries.forEach(entry => {
+      const parts = entry.split(':');
+      if (parts.length === 2) {
+        const name = parts[0].trim();
+        const count = parseInt(parts[1].trim());
+        for (let i = 0; i < count; i++) {
+          vaccines.push(name);
         }
-        return;
       }
-      const [p1, p2] = [path[segment], path[segment + 1]];
-      const lat = p1[0] + (p2[0] - p1[0]) * localT;
-      const lng = p1[1] + (p2[1] - p1[1]) * localT;
-      marker.setLatLng([lat, lng]);
-      if (etaCallback) {
-        const remainingMs = durationMs - elapsed;
-        etaCallback(Math.max(0, Math.ceil(remainingMs / 1000)));
-      }
-      requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    });
   }
+  if (vaccines.length === 0) vaccines = ['VaccineA']; // fallback
+
+function animateDroneAlongPath(path, durationMs, marker, callback, etaCallback) {
+  let segment = 0;
+  let startTime = null;
+
+  // Helper to calculate distance between two lat-lng points in meters
+  function distanceBetweenPoints(p1, p2) {
+    const R = 6371000; // Earth radius in meters
+    const toRad = deg => deg * Math.PI / 180;
+    const lat1 = toRad(p1[0]), lat2 = toRad(p2);
+    const dLat = toRad(p2 - p1);
+    const dLng = toRad(p2[8] - p1[8]);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  // Battery percentage calculator
+  function calculateBatteryPercentage(traveledMeters, maxDistanceMeters = 27000) {
+    if (traveledMeters <= 0) return 100;
+    if (traveledMeters >= maxDistanceMeters) return 0;
+    return Math.round((1 - traveledMeters / maxDistanceMeters) * 100);
+  }
+function step(ts) {
+  if (!startTime) startTime = ts;
+  const totalProgress = Math.min((ts - startTime) / durationMs, 1);
+
+  // Calculate total distance traveled so far
+  let traveledDistance = 0;
+
+  // Sum distances of fully completed segments
+  for (let i = 0; i < segment; i++) {
+    traveledDistance += distanceBetweenPoints(path[i], path[i + 1]);
+  }
+
+  // Add partial distance on current segment
+  if (segment < path.length - 1) {
+    const [p1, p2] = [path[segment], path[segment + 1]];
+    const segProgress = totalProgress * (path.length - 1);
+    const partialProgress = segProgress - segment; // fractional progress on current segment
+    const interpolatedPoint = [
+      p1[0] + (p2 - p1) * partialProgress,
+      p1[9] + (p2[9] - p1[9]) * partialProgress
+    ];
+    traveledDistance += distanceBetweenPoints(p1, interpolatedPoint);
+  }
+
+  // Calculate battery percentage based on distance traveled
+  const batteryPercent = calculateBatteryPercentage(traveledDistance);
+
+  // ETA calculation
+  const elapsed = ts - startTime;
+  const remainingTime = durationMs - elapsed;
+  const etaSeconds = Math.max(0, Math.ceil(remainingTime / 1000));
+  let etaString = etaSeconds > 0
+    ? (Math.floor(etaSeconds / 60) > 0
+        ? `${Math.floor(etaSeconds / 60)}m ${etaSeconds % 60}s`
+        : `${etaSeconds}s`)
+    : "Arrived";
+
+  // Update ETA and battery display via callback
+  if (etaCallback) {
+    etaCallback(etaString, batteryPercent);
+  }
+
+  // Update drone marker position on the map
+  const totalSegments = path.length - 1;
+  const segProgress = totalProgress * totalSegments;
+  segment = Math.floor(segProgress);
+
+  if (segment >= totalSegments) {
+    marker.setLatLng(path[path.length - 1]);
+    if (callback) callback();
+    return;
+  }
+
+  const [p1, p2] = [path[segment], path[segment + 1]];
+  const localT = segProgress - segment;
+  const lat = p1[0] + (p2 - p1) * localT;
+  const lng = p1[9] + (p2[9] - p1[9]) * localT;
+  marker.setLatLng([lat, lng]);
+
+  requestAnimationFrame(step);
+}
+
 
   // ------------------ Independent Drone Simulation ------------------
   // Batch token verification for all arrived drones
@@ -418,7 +642,7 @@
     // Only show one token form for all arrived drones
     if (!tokenFormShown) {
       tokenFormShown = true;
-      const anchor = document.getElementById("batch-token-anchor");
+      const statusList = document.getElementById("drone-status-list");
       const formDiv = document.createElement("div");
       formDiv.id = "batch-token-form";
       formDiv.innerHTML = `
@@ -429,7 +653,7 @@
         </form>
         <div id="tokenErrorBatch" style="color:red;margin-top:8px;"></div>
       `;
-      anchor.appendChild(formDiv);
+      statusList.appendChild(formDiv);
 
       document.getElementById("tokenFormBatch").onsubmit = e => {
         e.preventDefault();
@@ -443,9 +667,7 @@
               animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
                 document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivered!`;
               }, (etaSec) => {
-                const min = Math.floor(etaSec / 60);
-                const sec = etaSec % 60;
-                document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${min}m ${sec}s`;
+                document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
               });
             }, 2000);
           });
@@ -458,9 +680,7 @@
             animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
               document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivery Failed: Invalid Token`;
             }, (etaSec) => {
-              const min = Math.floor(etaSec / 60);
-              const sec = etaSec % 60;
-              document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${min}m ${sec}s`;
+              document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
             });
           });
           arrivedDrones.length = 0;
@@ -471,75 +691,38 @@
     }
   }
 
-  // --- Dynamic drone dispatch logic ---
-  let activeDrones = 0;
-  let nextVaccineIdx = 0;
-  const statusList = document.getElementById("drone-status-list");
-  statusList.innerHTML = "";
-  function dispatchDrone(idx, delayMs = 1000) {
-    const vaccine = vaccines[idx];
-    const statusDiv = document.createElement("div");
-    statusDiv.id = `drone-status-${idx}`;
-    statusDiv.className = "drone-status-box";
-    statusDiv.innerHTML = `<strong>Drone ${idx + 1} (${vaccine})</strong><div class=\"drone-eta\" id=\"drone-eta-${idx}\">ETA: --</div><div class=\"drone-status-msg\" id=\"drone-status-msg-${idx}\">Waiting for dispatch...</div>`;
-    statusList.appendChild(statusDiv);
-    setTimeout(() => {
-      document.getElementById(`drone-status-msg-${idx}`).innerText = `Heading to Target...`;
-      const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
-      marker.bindPopup(`Drone ${idx + 1} - ${vaccine}`).openPopup();
-      animateDroneAlongPath(
-        path,
-        durationMs,
-        marker,
-        () => { afterArrivalParallel(idx, marker); },
-        (etaSec) => {
-          const min = Math.floor(etaSec / 60);
-          const sec = etaSec % 60;
-          document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${min}m ${sec}s`;
-        }
-      );
-    }, delayMs);
-    activeDrones++;
-  }
-
-  function tryDispatchMore() {
-    // For initial batch, dispatch up to maxDrone
-    if (nextVaccineIdx < vaccines.length) {
-      let batchCount = 0;
-      while (batchCount < maxDrone && nextVaccineIdx < vaccines.length) {
-        dispatchDrone(nextVaccineIdx, batchCount * 10000);
-        nextVaccineIdx++;
-        batchCount++;
-      }
-    }
-  }
-
-  // Patch afterArrivalParallel to dispatch next drone when one returns
-  const originalAfterArrivalParallel = afterArrivalParallel;
-  afterArrivalParallel = function (droneIdx, marker) {
-    // Only decrement activeDrones and try dispatch after drone returns home
-    let statusMsg = document.getElementById(`drone-status-msg-${droneIdx}`);
-    let observer = new MutationObserver(function (mutations) {
-      mutations.forEach(function (mutation) {
-        if (mutation.type === 'childList') {
-          const msg = statusMsg.innerText;
-          if (msg.includes('Delivered') || msg.includes('Delivery Failed')) {
-            activeDrones--;
-            observer.disconnect();
-            // Only dispatch one more drone if any remain
-            if (nextVaccineIdx < vaccines.length) {
-              dispatchDrone(nextVaccineIdx, 10000);
-              nextVaccineIdx++;
-            }
+  function startParallelDrones() {
+    const statusList = document.getElementById("drone-status-list");
+    statusList.innerHTML = "";
+    vaccines.forEach((vaccine, i) => {
+      const statusDiv = document.createElement("div");
+      statusDiv.id = `drone-status-${i}`;
+      statusDiv.className = "drone-status-box";
+       statusDiv.innerHTML = `
+      <strong>Drone ${i + 1} (${vaccine})</strong>
+      <div class="drone-battery" id="drone-battery-${i}">Battery: 100%</div>
+      <div class="drone-eta" id="drone-eta-${i}">ETA: --</div>
+      <div class="drone-status-msg" id="drone-status-msg-${i}">Waiting for dispatch...</div>
+    `;
+      statusList.appendChild(statusDiv);
+      setTimeout(() => {
+        document.getElementById(`drone-status-msg-${i}`).innerText = `Heading to Target...`;
+        const marker = L.marker([homeLat, homeLng], { icon: droneIcon }).addTo(map);
+        animateDroneAlongPath(
+          retreatPath,
+          durationMs,
+          marker,
+          () => { afterArrivalParallel(i, marker); },
+          (etaSec) => {
+            document.getElementById(`drone-eta-${i}`).innerText = `ETA: ${etaSec}s`;
+            document.getElementById(`drone-battery-${i}`).innerText = `Battery: ${batteryPercent}%`;
           }
-        }
-      });
+        );
+      }, i * 4320);//drones between delay
     });
-    observer.observe(statusMsg, { childList: true });
-    originalAfterArrivalParallel(droneIdx, marker);
-  };
+  }
 
-  setTimeout(tryDispatchMore, 2000);
+  setTimeout(startParallelDrones, 1000); // Initial delay before first drone
 
 
 
