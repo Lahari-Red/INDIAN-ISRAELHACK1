@@ -46,13 +46,14 @@ Only authorized users can schedule dispatches, ensuring **security, integrity, a
 
 Our in-house navigation system overlays a color-coded zone framework to manage drone delivery operations efficiently and safely:
 
-Red Zones: These are strictly no-fly zones where drone operations are either prohibited or permitted only with explicit central government authorization. Red zones commonly cover high-security or sensitive areas such as military installations, airports, government buildings, and other critical infrastructure. Drones are not allowed to enter or deliver within these zones without proper clearance to ensure safety and regulatory compliance.
+<p><span style="color: red; font-size: 18px;">&#9679;</span> <strong>Red Zones:</strong> These are strictly no-fly zones where drone operations are either prohibited or permitted only with explicit central government authorization...</p>
 
-Outer Range (Yellow Zone): This outer operational boundary extends beyond the inner range but within the drone’s authorized flight perimeter. If a delivery point is in the yellow zone, the drone completes the delivery and then proceeds to the nearest designated safe zone (green zone) for landing and waiting before returning to base. This approach helps maintain safety during extended range flights.
+<p><span style="color: yellow; font-size: 18px;">&#9679;</span> <strong>Outer Range (Yellow Zone):</strong> This outer operational boundary extends beyond the inner range but within the drone’s authorized flight perimeter...</p>
 
-Inner Range (Blue Zone): This zone is the drone’s efficient two-way travel range, closer to the base station. For destinations within this blue inner range, the drone completes deliveries and returns directly to base without intermediate stops.
+<p><span style="color: blue; font-size: 18px;">&#9679;</span> <strong>Inner Range (Blue Zone):</strong> This zone is the drone’s efficient two-way travel range, closer to the base station...</p>
 
-Safe Zones (Green Zones): Strategically positioned landing or standby spots where drones can safely land, recharge, or wait between deliveries. Safe zones support extended missions by providing secure points within or near the outer range for drones to rest before continuing or returning.
+<p><span style="color: green; font-size: 18px;">&#9679;</span> <strong>Safe Zones (Green Zones):</strong> Strategically positioned landing or standby spots where drones can safely land, recharge, or wait between deliveries...</p>
+
 
 This zone-based navigation strategy leverages informed routing and strict compliance with regulatory no-fly zones (red), while optimizing delivery efficiency and safety during both short-range (blue) and longer-range (yellow) operations.
 
