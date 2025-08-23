@@ -242,6 +242,7 @@
     <section class="dashboard-section">
         <div class="container">
             <h1>Drone Dispatch System</h1>
+            {{max_drone}}
             {% if error %}
             <p class="error">{{ error }}</p>
             {% endif %}
@@ -253,7 +254,7 @@
             {% endif %}
 
             <p id="noFlyWarning" class="error" style="display:none;"></p> <!--no-fly error-->
-
+            
             <form method="POST" action="/tracking" class="cards">
                 <div class="vaccine-card">
                     {% for vaccine in session.get('vaccines', []) %}
@@ -263,15 +264,15 @@
                         <p>{{ vaccine.description }}</p>
                         <div style="display:flex;align-items:center;gap:0.5rem;">
                             <button type="button" onclick="changeCount({{ loop.index }}, 1)"
-                                style="font-size:1.2rem;">+</button>
+                            style="font-size:1.2rem;">+</button>
                             <input type="number" id="vaccineCount{{ loop.index }}"
                                 name="vaccine_counts_{{ vaccine.name }}" style="width:3rem;text-align:center;"
                                 value="0">
-                            <button type="button" onclick="changeCount({{ loop.index }}, -1)"
+                                <button type="button" onclick="changeCount({{ loop.index }}, -1)"
                                 style="font-size:1.2rem;">-</button>
+                            </div>
+                            <input type="hidden" name="vaccines" value="{{ vaccine.name }}">
                         </div>
-                        <input type="hidden" name="vaccines" value="{{ vaccine.name }}">
-                    </div>
                     {% endfor %}
                 </div>
                 <script>
@@ -281,7 +282,7 @@
                         val = Math.max(0, val + delta);
                         input.value = val;
                     }
-                </script>
+                    </script>
 
                 <div class="other-card">
                     <div id="map" class="map"></div>
