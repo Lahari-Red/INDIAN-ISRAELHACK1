@@ -170,12 +170,13 @@ def user_dashboard():
 @app.route('/tracking', methods=['GET', 'POST'])
 def tracking():
     if request.method == 'POST':
-        vaccine_type = request.form.get('vaccine')
+        vaccine_types = request.form.getlist('vaccines')
+        print(vaccine_types)
         latitude = request.form.get('lat')
         longitude = request.form.get('lng')
         vaccine_error=None
         location_error=None
-        if not vaccine_type:
+        if not vaccine_types:
             vaccine_error = "Please select a vaccine type."
         if not latitude or not longitude:
             location_error = "Please provide valid latitude and longitude."
@@ -196,7 +197,7 @@ def tracking():
         distance = R * c
 
         data = {
-            "vaccine_type": vaccine_type,
+            "vaccine_types": vaccine_types,
             "latitude": latitude,
             "longitude": longitude,
             "distance": f"{distance:.2f}"
@@ -208,7 +209,7 @@ def tracking():
             # Find vaccine_id from session vaccines
             vaccine_id = None
             for vaccine in session.get('vaccines', []):
-                if vaccine['name'] == vaccine_type:
+                if vaccine['name'] == vaccine_types:
                     vaccine_id = vaccine['id']
                     break
             # Save tracking info to database
