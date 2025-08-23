@@ -343,12 +343,66 @@
         }).addTo(map);
         L.marker([30.3529, 76.3637]).addTo(map).bindPopup("Home Station").openPopup();
         L.circle([30.3529, 76.3637], {
-            radius: 5000,
+            radius: 15000,
             color: "blue",
             fillColor: "blue",
-            fillOpacity: 0.10
+            fillOpacity: 0.15
         }).addTo(map);
+L.circle([30.3529, 76.3637], {
+    radius: 25000,
+    color: "yellow",
+    fillColor: "yellow",
+    fillOpacity: 0.15
+}).addTo(map);
+      // Calculate point function (same as before)
+// Center point
+var center = {lat: 30.3529, lng: 76.3637};
+var radius = 23000; // 23km in meters
 
+// Calculate point function (same as before)
+function calculatePoint(center, distance, bearing) {
+   var R = 6371000; // Earth's radius in meters
+   var φ1 = center.lat * Math.PI / 180;
+   var λ1 = center.lng * Math.PI / 180;
+   var brng = bearing * Math.PI / 180;
+   
+   var φ2 = Math.asin(Math.sin(φ1) * Math.cos(distance/R) +
+                     Math.cos(φ1) * Math.sin(distance/R) * Math.cos(brng));
+   var λ2 = λ1 + Math.atan2(Math.sin(brng) * Math.sin(distance/R) * Math.cos(φ1),
+                           Math.cos(distance/R) - Math.sin(φ1) * Math.sin(φ2));
+   
+   return {
+       lat: φ2 * 180 / Math.PI,
+       lng: λ2 * 180 / Math.PI
+   };
+}
+
+// 8 main directions (every 45 degrees)
+var directions = [0, 45, 90, 135];
+var safeZones = [];
+
+// For each direction, create 2 circles on opposite sides
+directions.forEach(function(bearing) {
+   // First circle at bearing direction
+   var point1 = calculatePoint(center, radius, bearing);
+   safeZones.push([point1.lat, point1.lng]);
+   
+   // Second circle at opposite direction (bearing + 180)
+   var oppositeBearing = (bearing + 180) % 360;
+   var point2 = calculatePoint(center, radius, oppositeBearing);
+   safeZones.push([point2.lat, point2.lng]);
+});
+
+// Add circles to map
+safeZones.forEach(function(coord, index) {
+   L.circle(coord, {
+       radius: 500,        // Small circle radius
+       color: "green",
+       fillColor: "green",
+       fillOpacity: 0.3,
+       weight: 2
+   }).addTo(map);
+});
         // Define no-fly zones directly as circles: [centerLat, centerLng, radius]
         const noFlyZones = [
             [30.3565, 76.3615, 0.002], // Zone 1
@@ -426,8 +480,8 @@
             const input = document.getElementById('vaccineCount' + idx);
             let val = parseInt(input.value) || 0;
 
-            // Apply limit of 5
-            if (delta > 0 && val < 5) {
+            // Apply limit of 3
+            if (delta > 0 && val < 3) {
                 val = val + delta;
             } else if (delta < 0 && val > 0) {
                 val = val + delta;
