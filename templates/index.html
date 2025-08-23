@@ -7,211 +7,267 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;600;700&family=Bebas+Neue&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Smooth scrolling and sticky navbar */
-        html { scroll-behavior: smooth; }
-        .nav-wrap {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: #fff8e7;
-            animation: fadeIn 1s ease-in;
+        body {
+            background: linear-gradient(120deg, #f6eddc 0%, #efe8d8 100%);
+            min-height: 100vh;
+            font-family: 'Montserrat', 'Roboto', Arial, sans-serif;
         }
-        /* Centering styles for sections */
-        .hero-inner, .cards, .grid.team, .drone-wrap, .page-head, .navigation-model {
+        .hero-section {
+            position: relative;
+            background: linear-gradient(120deg, #fff8e7 60%, #f6eddc 100%);
+            padding: 4rem 0 2rem 0;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            background: url('{{ url_for('static', filename='photos/map.jpg') }}') center/cover no-repeat;
+            opacity: 0.08;
+        }
+        .hero-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
             justify-content: center;
-            text-align: center;
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .hero-copy {
-            margin: 0 auto;
-            max-width: 700px;
+            max-width: 600px;
+            text-align: left;
         }
-        /* Section styling */
-        .section {
-            background: linear-gradient(180deg, #efe8d8, #f6eddc);
-            animation: fadeIn 1s ease-in;
+        .hero-copy h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.2rem;
+            color: #d90429;
+            margin-bottom: 1.2rem;
+            line-height: 1.1;
         }
-        /* Tech stack card images */
-        .card {
+        .hero-copy .lede {
+            font-size: 1.3rem;
+            color: #222;
+            margin-bottom: 2rem;
+        }
+        .cta {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1.5rem;
+            gap: 1.2rem;
         }
-        .card img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-        }
-        /* Navigation model section */
-        .navigation-model {
-            padding: 2rem 0;
-        }
-        .navigation-model img {
-            max-width: 300px;
-            border: 3px solid #333;
+        .btn, .btn.ghost {
+            padding: 0.9rem 2.2rem;
             border-radius: 6px;
-            box-shadow: 6px 6px 0 #222;
-            margin: 1.5rem auto;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(217,4,41,0.08);
+            cursor: pointer;
         }
-        /* Login section */
+        .btn {
+            background: #d90429;
+            color: #fff;
+            border: none;
+        }
+        .btn:hover {
+            background: #b10321;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(217,4,41,0.15);
+        }
+        .btn.ghost {
+            background: none;
+            color: #d90429;
+            border: 2px solid #d90429;
+        }
+        .btn.ghost:hover {
+            background: #d90429;
+            color: #fff;
+        }
+        .hero-image img {
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(37,99,235,0.12);
+            width: 420px;
+            height: auto;
+        }
+        .nav-wrap {
+            background: #fff8e7;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 1.2rem 0;
+        }
+        .brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2rem;
+            color: #d90429;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .logo-placeholder {
+            width: 38px; height: 38px;
+            background: url('{{ url_for('static', filename='icons/drone.ico') }}') center/cover no-repeat;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(217,4,41,0.12);
+        }
+        .links a {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            color: #222;
+            text-decoration: none;
+            margin: 0 1.1rem;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+        .links a:hover {
+            color: #d90429;
+        }
+        /* Login/Signup Section */
         #login-section {
-            padding: 4rem 0;
+            background: #fffdf6;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(37,99,235,0.10);
+            margin: 3rem auto;
+            max-width: 600px;
+            padding: 2.5rem 2rem;
         }
         #login-section h2 {
-            font-size: 3.5rem;
+            font-size: 2.5rem;
             color: #d90429;
-            text-shadow: 3px 3px #9a7b4f;
-            margin-bottom: 2.5rem;
-            text-transform: uppercase;
             font-family: 'Bebas Neue', sans-serif;
+            margin-bottom: 2rem;
+            text-align: center;
         }
-        /* Auth sections */
         .auth-section {
             display: none;
-            padding: 2rem;
-            max-width: 500px;
-            margin: 0 auto;
         }
         .auth-section.active {
             display: block;
+            animation: fadeIn 0.7s;
         }
-        /* Login form specific styles */
-        #signin.auth-section {
-            background: #fffdf6;
-            border: 3px solid #333;
-            border-radius: 6px;
-            box-shadow: 8px 8px 0 #222;
-            animation: fadeIn 0.8s ease-in;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #signin form {
-            width: 100%;
+        .auth-section form {
             display: flex;
             flex-direction: column;
             gap: 1.2rem;
-            align-items: stretch;
         }
-        #signin label {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.2rem;
-            color: #333;
-            letter-spacing: 1px;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
+        .auth-section label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            color: #222;
+            margin-bottom: 0.3rem;
         }
-        #signin input, #signin select {
-            padding: 0.8rem;
-            border: 2px solid #333;
-            border-radius: 4px;
-            font-family: 'Roboto', sans-serif;
+        .auth-section input, .auth-section select {
+            padding: 0.7rem;
+            border: 2px solid #d90429;
+            border-radius: 6px;
             font-size: 1rem;
             background: #f6eddc;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            width: 100%;
+            margin-bottom: 0.7rem;
         }
-        #signin input:focus, #signin select:focus {
-            border-color: #d90429;
-            box-shadow: 0 0 5px rgba(217, 4, 41, 0.3);
+        .auth-section input:focus, .auth-section select:focus {
+            border-color: #2563eb;
             outline: none;
         }
-        #signin .error-msg {
-            color: #d90429;
-            font-size: 0.9rem;
-            margin-top: 0.3rem;
-            text-align: left;
-        }
-        #signin .auth-actions {
+        .auth-actions {
             display: flex;
-            justify-content: space-between;
             gap: 1rem;
-            margin-top: 1.5rem;
+        }
+        .btn-signin, .btn-signup {
+            padding: 0.7rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            background: #d90429;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-signup {
+            background: #2563eb;
+        }
+        .btn-signin:hover, .btn-signup:hover {
+            background: #b10321;
+            color: #fff;
+        }
+        .btn-signup:hover {
+            background: #1746a0;
+        }
+        .error-msg {
+            color: #d90429;
+            font-size: 0.95rem;
+            margin-top: -0.5rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+        }
+        .card {
+            background: #fffdf6;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(37,99,235,0.10);
+            padding: 2rem 1.5rem;
+            width: 260px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
             align-items: center;
         }
-        #signin .btn-signin, #signin .btn-signup {
-            flex: 1;
-            text-align: center;
-            padding: 0.8rem;
-            border-radius: 4px;
-            font-family: 'Roboto', sans-serif;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.2s, transform 0.2s;
-            cursor: pointer;
+        .card img {
+            width: auto;
+            height:auto;
+            margin-bottom: 1.2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(217,4,41,0.08);
+            background: #f6eddc;
         }
-        #signin .btn-signin {
-            background: #d90429;
-            color: #fff;
-            box-shadow: 3px 3px 0 #111;
-            border: none;
-        }
-        #signin .btn-signin:hover {
-            background: #b10321;
-            transform: scale(1.05);
-        }
-        #signin .btn-signup {
-            border: 2px solid #d90429;
+        .card h3 {
+            font-size: 1.25rem;
             color: #d90429;
-            background: none;
-            box-shadow: 3px 3px 0 #ddd;
+            margin-bottom: 0.7rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
         }
-        #signin .btn-signup:hover {
-            background: #d90429;
-            color: #fff;
-            transform: scale(1.05);
+        .card p {
+            font-size: 1rem;
+            color: #222;
+            margin-bottom: 0;
+            font-family: 'Montserrat', sans-serif;
         }
-        /* Fade-in animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(217,4,41,0.15);
         }
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .hero-copy { max-width: 90%; }
-            #signin.auth-section { max-width: 90%; }
-            #login-section h2 { font-size: 2.5rem; }
-            #signin .auth-actions { flex-direction: column; gap: 0.8rem; }
-            #signin .btn-signin, #signin .btn-signup { width: 100%; }
-            .cards { grid-template-columns: 1fr; }
-            .navigation-model img { max-width: 90%; }
+        @media (max-width: 900px) {
+            .cards {
+                flex-direction: column;
+                align-items: center;
+                gap: 1.5rem;
+            }
+            .card {
+                width: 90vw;
+                max-width: 340px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .hero-inner { flex-direction: column; gap: 2rem; }
+            .hero-image img { width: 90vw; max-width: 400px; }
+        }
+        @media (max-width: 600px) {
+            #login-section { padding: 1.2rem 0.5rem; }
+            .hero-copy h1 { font-size: 2.1rem; }
         }
     </style>
     <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-            return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                        headerRowIndex = 0;
-                    }
-                    var csvSheet = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                    var csv = XLSX.utils.sheet_to_csv(csvSheet, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error(e);
-                    return "";
-                }
-            }
-            return gk_fileData[filename] || "";
-        }
         function toggle(form) {
             document.getElementById('signin').classList.remove('active');
             document.getElementById('signup').classList.remove('active');
@@ -219,11 +275,12 @@
             window.scrollTo({ top: document.getElementById('login-section').offsetTop - 50, behavior: 'smooth' });
         }
         window.addEventListener('DOMContentLoaded', function () {
-            {% if signup_error %}
+            var showSignup = {{ 'true' if signup_error else 'false' }};
+            if (showSignup) {
                 toggle('signup');
-            {% else %}
+            } else {
                 toggle('signin');
-            {% endif %}
+            }
         });
     </script>
 </head>
@@ -269,22 +326,22 @@
             </div>
             <div class="cards">
                 <div class="card">
-                    <img src="{{ url_for('static', filename='flask.png') }}" alt="Flask Logo">
+                    <img src="{{ url_for('static', filename='photos/flask.webp') }}" alt="Flask Logo">
                     <h3>Backend: Python Flask</h3>
                     <p>Robust API and application logic for scalable, secure drone management.</p>
                 </div>
                 <div class="card">
-                    <img src="{{ url_for('static', filename='html.png') }}" alt="Frontend Logo">
+                    <img src="{{ url_for('static', filename='photos/frontend.png') }}" alt="Frontend Logo">
                     <h3>Frontend: HTML, CSS, JS</h3>
                     <p>Clean, responsive UI/UX for intuitive user interaction.</p>
                 </div>
                 <div class="card">
-                    <img src="{{ url_for('static', filename='leaflet.png') }}" alt="Leaflet Logo">
+                    <img src="{{ url_for('static', filename='photos/leaflet.png') }}" alt="Leaflet Logo">
                     <h3>Interactive Map: Leaflet</h3>
                     <p>Dynamic map visualizations for real-time drone tracking and route planning.</p>
                 </div>
                 <div class="card">
-                    <img src="{{ url_for('static', filename='aiven.png') }}" alt="Aiven Logo">
+                    <img src="{{ url_for('static', filename='photos/aiven.png') }}" alt="Aiven Logo">
                     <h3>Database: Aiven</h3>
                     <p>Managed cloud database for secure, reliable data storage and retrieval.</p>
                 </div>
