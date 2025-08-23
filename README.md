@@ -26,43 +26,38 @@ Despite major progress in drone technology, its life-saving potential for emerge
 ## Solution Description
 
 
-The **Drone Dispatch System (DDS)** platform empowers verified users with **cutting-edge features for life-saving operations**:
-
+The **Drone Dispatch System (DDS)** platform empowers verified users with **features optimized  for life-saving operations**:
 ✅ **Select Essential Medical Payloads**  
 Choose from a range of critical medical supplies — vaccines, blood units, emergency kits, anti-venom, and more — ensuring timely aid during crises.  
-
 ✅ **Pinpoint Exact Delivery Coordinates**  
 Input precise latitude and longitude to deliver supplies to the most **remote, rural, or disaster-struck areas** without error.  
-
 ✅ **Track Drones in Real-Time**  
 Monitor live drone movements on an **interactive Leaflet.js-powered map**, providing **full mission transparency and control**.  
-
-✅ **Harness AI-Optimized Navigation**  
-Experience **machine learning-driven route optimization**, where drones dynamically adapt for the **fastest, safest, and most efficient paths** — overcoming obstacles, weather disruptions, and terrain challenges.  
-
+✅ **Highy Optimization Navigation**  
+Experience **smart route optimization**, where drones dynamically adapt for the **fastest, safest, and most efficient paths** — overcoming obstacles, weather disruptions, and terrain challenges.  
 ✅ **Secure & Verified Access**  
 Only authorized users can schedule dispatches, ensuring **security, integrity, and accountability** in emergency deliveries.  
 
 
 ---
 
-## **Navigation Model**
+## **In-House Navigation Model**
 
 <img src="static/photos/navigationmap.jpg" alt="DDS Hero" width="700">
 
-Swift, Safe, Smart Deliveries using Autonomous Drones
+Our in-house navigation system overlays a color-coded zone framework to manage drone delivery operations efficiently and safely:
+
+Red Zones: These are strictly no-fly zones where drone operations are either prohibited or permitted only with explicit central government authorization. Red zones commonly cover high-security or sensitive areas such as military installations, airports, government buildings, and other critical infrastructure. Drones are not allowed to enter or deliver within these zones without proper clearance to ensure safety and regulatory compliance.
+
+Outer Range (Yellow Zone): This outer operational boundary extends beyond the inner range but within the drone’s authorized flight perimeter. If a delivery point is in the yellow zone, the drone completes the delivery and then proceeds to the nearest designated safe zone (green zone) for landing and waiting before returning to base. This approach helps maintain safety during extended range flights.
+
+Inner Range (Blue Zone): This zone is the drone’s efficient two-way travel range, closer to the base station. For destinations within this blue inner range, the drone completes deliveries and returns directly to base without intermediate stops.
+
+Safe Zones (Green Zones): Strategically positioned landing or standby spots where drones can safely land, recharge, or wait between deliveries. Safe zones support extended missions by providing secure points within or near the outer range for drones to rest before continuing or returning.
+
+This zone-based navigation strategy leverages informed routing and strict compliance with regulatory no-fly zones (red), while optimizing delivery efficiency and safety during both short-range (blue) and longer-range (yellow) operations.
 
 
-### **How It Works**
-- **Graph-based pathfinding** using ML algorithms for optimized routing.
-- **Dynamic adjustments** based on:
-  - Obstacles
-  - Weather conditions
-  - Airspace restrictions
-- **Integration with Leaflet.js** for real-time visualization.
-- **GPS Precision** + **Aiven Cloud Database** for continuous data sync.
-
-*This ensures shortest, safest, and most efficient routes for medical supply delivery.*
 
 ---
 
@@ -107,7 +102,7 @@ The **Tracking Page** lets users:
 ## Team Members
 | Name | Role | Contact |
 |------|------|---------|
-| Lakshita | AI/ML Implementation | lakshitaaggarwal2411@gmail.com |
+| Lakshita | Path Optimization Model /Ml | lakshitaaggarwal2411@gmail.com |
 | Lahari | Frontend | bomminenilahari@gmail.com |
 | Kamesh | Backend | yadavkamesh91@gmail.com |
 | Kaamya | UI/UX | kmathpal_be24@thapar.edu |
