@@ -84,7 +84,7 @@
   </header>
   <section class="hero">
     <div id="map"></div>
-    <div id="eta">Calculating ETA...</div>
+    <div id="batch-token-anchor"></div>
     <div id="drone-status-list"></div>
   </section>
   <style>
@@ -388,18 +388,20 @@
   }
   if (vaccines.length === 0) vaccines = ['VaccineA']; // fallback
 
-  function animateDroneAlongPath(path, durationMs, marker, callback) {
+  function animateDroneAlongPath(path, durationMs, marker, callback, etaCallback) {
     let segment = 0;
     let startTime = null;
     function step(ts) {
       if (!startTime) startTime = ts;
-      const totalProgress = Math.min((ts - startTime) / durationMs, 1);
+      const elapsed = ts - startTime;
+      const totalProgress = Math.min(elapsed / durationMs, 1);
       const totalSegments = path.length - 1;
       const segProgress = totalProgress * totalSegments;
       segment = Math.floor(segProgress);
       const localT = segProgress - segment;
       if (segment >= totalSegments) {
         marker.setLatLng(path[path.length - 1]);
+        if (etaCallback) etaCallback(0);
         if (callback) callback();
         return;
       }
@@ -407,6 +409,10 @@
       const lat = p1[0] + (p2[0] - p1[0]) * localT;
       const lng = p1[1] + (p2[1] - p1[1]) * localT;
       marker.setLatLng([lat, lng]);
+      if (etaCallback) {
+        const remainingMs = durationMs - elapsed;
+        etaCallback(Math.max(0, Math.ceil(remainingMs / 1000)));
+      }
       requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -421,7 +427,7 @@
     // Only show one token form for all arrived drones
     if (!tokenFormShown) {
       tokenFormShown = true;
-      const statusList = document.getElementById("drone-status-list");
+      const anchor = document.getElementById("batch-token-anchor");
       const formDiv = document.createElement("div");
       formDiv.id = "batch-token-form";
       formDiv.innerHTML = `
@@ -432,7 +438,7 @@
         </form>
         <div id="tokenErrorBatch" style="color:red;margin-top:8px;"></div>
       `;
-      statusList.appendChild(formDiv);
+      anchor.appendChild(formDiv);
 
       document.getElementById("tokenFormBatch").onsubmit = e => {
         e.preventDefault();
@@ -446,7 +452,9 @@
               animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
                 document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivered!`;
               }, (etaSec) => {
-                document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
+                const min = Math.floor(etaSec / 60);
+                const sec = etaSec % 60;
+                document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${min}m ${sec}s`;
               });
             }, 2000);
           });
@@ -459,7 +467,9 @@
             animateDroneAlongPath([...path].reverse(), durationMs, marker, () => {
               document.getElementById(`drone-status-msg-${idx}`).innerText = `Delivery Failed: Invalid Token`;
             }, (etaSec) => {
-              document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${etaSec}s`;
+              const min = Math.floor(etaSec / 60);
+              const sec = etaSec % 60;
+              document.getElementById(`drone-eta-${idx}`).innerText = `ETA: ${min}m ${sec}s`;
             });
           });
           arrivedDrones.length = 0;
@@ -489,7 +499,9 @@
           marker,
           () => { afterArrivalParallel(i, marker); },
           (etaSec) => {
-            document.getElementById(`drone-eta-${i}`).innerText = `ETA: ${etaSec}s`;
+            const min = Math.floor(etaSec / 60);
+            const sec = etaSec % 60;
+            document.getElementById(`drone-eta-${i}`).innerText = `ETA: ${min}m ${sec}s`;
           }
         );
       }, i * 4320);
