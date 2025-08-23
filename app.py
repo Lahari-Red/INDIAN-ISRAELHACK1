@@ -214,7 +214,8 @@ def tracking():
             "vaccine_types": vaccine_types,
             "latitude": latitude,
             "longitude": longitude,
-            "distance": f"{distance:.2f}"
+            "distance": f"{distance:.2f}",
+            "vaccine_queue": vaccine_types if vaccine_types else []
         }
 
         if distance > 15:
@@ -253,12 +254,21 @@ def tracking():
                     conn.commit()
 
                     data["delivery_id"] = delivery_id
-
+                    
                 except Exception as e:
                     print(f"Error saving tracking info: {e}")
                 finally:
                     conn.close()
-            return render_template("tracking.html", data=data,token=token)
+                conn= get_db_connection()
+                if not conn:
+                    return jsonify({"error": "DB connection failed"})
+                cursor= conn.cursor()
+                cursor.execute("SELECT * FROM drones")
+                drones = cursor.fetchall()
+                cursor.close()
+                conn.close()
+                data["drone_count"] = len(drones)-3
+            return render_template("tracking.html", data=data,token=token,max_drone=len(drones)-3)
     return render_template('tracking.html')
 
 
@@ -485,6 +495,8 @@ def admin_dashboard():
     admins = cursor.fetchall()
     cursor.execute("select count(*) from deliveries")
     total_requests= cursor.fetchone()['count(*)']
+    cursor.execute("select * from drones")
+    drones = cursor.fetchall()
     cursor.execute("select count(*) from deliveries where status in ('dispatching vaccine', 'delivered', 'returning to home station')")
     total_deliveries = cursor.fetchone()['count(*)']
     cursor.execute("select count(*) from deliveries where status in ('token failed', 'delivery failed')")
@@ -497,14 +509,95 @@ def admin_dashboard():
         "users": users,
         "admins": admins,
         "total_users": len(users),
-        "total_drones": 1,
+        "total_drones": len(drones),
         "total_deliveries": total_deliveries,
         "pending_deliveries": max(x, 0),
         "total_requests": total_requests,
-        "failed_deliveries": failed_deliveries
+        "failed_deliveries": failed_deliveries,
+        "drones": drones
     }
     return render_template('dashboard.html',**messages )
 
+@app.route('/admin_dashboard/delete_drone/<int:drone_id>', methods=['POST'])
+def delete_drone(drone_id):
+    conn = get_db_connection()
+    if not conn:
+        return render_template('dashboard.html', error="Database connection error.")
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM drones WHERE DroneID = %s", (drone_id,))
+        conn.commit()
+    except Exception as e:
+        print(f"Error deleting drone: {e}")
+        return render_template('dashboard.html', error="Failed to delete drone.")
+    finally:
+        conn.close()
+    print("Drone deleted successfully.")
+    return redirect(url_for('admin_dashboard'))
+
+
+
+@app.route('/admin_dashboard/add_drone', methods=['POST'])
+def add_drone():
+    serial_number = request.form.get('serial_number', '').strip()
+    model = request.form.get('model', '').strip()
+    manufacturer = request.form.get('manufacturer', '').strip()
+    status = request.form.get('status', '').strip()
+    battery_level = request.form.get('battery_level', '').strip()
+    location = request.form.get('location', '').strip()
+    max_payload_kg = request.form.get('max_payload_kg', '').strip()
+    errors = {}
+    if not serial_number:
+        errors['serial_number_error'] = "Serial number is required."
+    if not model:
+        errors['model_error'] = "Model is required."
+    if not manufacturer:
+        errors['manufacturer_error'] = "Manufacturer is required."
+    if not status:
+        errors['status_error'] = "Status is required."
+    if not battery_level:
+        errors['battery_level_error'] = "Battery level is required."
+    else:
+        try:
+            battery_level = int(battery_level)
+            if battery_level < 0 or battery_level > 100:
+                errors['battery_level_error'] = "Battery level must be between 0 and 100."
+        except ValueError:
+            errors['battery_level_error'] = "Battery level must be a number."
+    if not location:
+        errors['location_error'] = "Location is required."
+    if not max_payload_kg:
+        errors['max_payload_kg_error'] = "Max payload is required."
+    else:
+        try:
+            max_payload_kg = float(max_payload_kg)
+            if max_payload_kg < 0:
+                errors['max_payload_kg_error'] = "Max payload must be non-negative."
+        except ValueError:
+            errors['max_payload_kg_error'] = "Max payload must be a number."
+    if errors:
+        return render_template('dashboard.html', **errors)
+    conn = get_db_connection()
+    if not conn:
+        error = "Database connection error."
+        return render_template('dashboard.html', error=error)
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO drones (SerialNumber, Model, Manufacturer, Status, BatteryLevel, Location, MaxPayloadKg)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (serial_number, model, manufacturer, status, battery_level, location, max_payload_kg)
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"Error adding drone: {e}")
+        error = "Failed to add drone."
+        return render_template('dashboard.html', error=error)
+    finally:
+        conn.close()
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/logout')
 def logout():
