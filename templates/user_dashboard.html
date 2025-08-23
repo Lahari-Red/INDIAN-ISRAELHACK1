@@ -51,10 +51,10 @@
             color: #222;
         }
         /* Radio button selection */
-        input[type="radio"] {
+        input[type="checkbox"] {
             display: none;
         }
-        input[type="radio"]:checked + label .card {
+        input[type="checkbox"]:checked + label .card {
             border: 3px solid #d90429;
             box-shadow: 8px 8px 0 #111;
         }
@@ -170,7 +170,7 @@
             <form method="POST" action="/tracking" class="cards">
                 <div class="vaccine-card">
                     {% for vaccine in session.get('vaccines', []) %}
-                    <input type="radio" id="vaccine{{ loop.index }}" name="vaccine" value="{{ vaccine.name }}">
+                    <input type="checkbox" id="vaccine{{ loop.index }}" name="vaccines" value="{{ vaccine.name }}">
                     <label for="vaccine{{ loop.index }}">
                         <div class="card">
                             <h3>{{ vaccine.name }}</h3>
