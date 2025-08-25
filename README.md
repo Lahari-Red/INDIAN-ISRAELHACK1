@@ -100,15 +100,7 @@ The **Tracking Page** lets users:
 
 ---
 
-## Team Members
-| Name | Role | Contact |
-|------|------|---------|
-| Lakshita | Path Optimization Model /Ml | lakshitaaggarwal2411@gmail.com |
-| Lahari | Frontend | bomminenilahari@gmail.com |
-| Kamesh | Backend | yadavkamesh91@gmail.com |
-| Kaamya | UI/UX | kmathpal_be24@thapar.edu |
-| Aryan | Backend | aryanawasthi017@gmail.com |
-| Abhinab | Drone Logic & Visualization | abhinab2k05@gmail.com |
+
 
 ---
 
