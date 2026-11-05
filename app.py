@@ -19,6 +19,9 @@ HOME_LNG = 76.3637
 ACCESS_TOKEN = "token123"
 
 # Database configuration
+#PyMySQL to connect our Flask backend to the Aiven Cloud SQL database. 
+#The DB_CONFIG dictionary contains the connection parameters, and PyMySQL uses them to establish the connection.
+#Once connected, we execute SQL queries to store and retrieve user, drone, inventory, and delivery information.
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "drone-dispatch-system-thapar-a4f3.c.aivencloud.com"),
     "port": int(os.getenv("DB_PORT", 23916)),
