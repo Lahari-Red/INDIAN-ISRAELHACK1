@@ -45,7 +45,7 @@ def get_db_connection():
 @app.route('/')
 def home():
     return render_template('index.html')
-
+#A POST request is generally used to send data from the frontend to the backend.
 @app.route('/login', methods=['POST'])
 def login():
     email = request.form.get('email', '').strip()
@@ -71,12 +71,13 @@ def login():
     try:
         if memberType=='user':
             with conn.cursor() as cursor:
-
+#%s is a parameter placeholder used by PyMySQL. It helps safely pass user input into the query rather than constructing SQL by concatenating strings.
                 cursor.execute("SELECT * FROM users WHERE email = %s AND password = %s", (email, password))
                 user = cursor.fetchone()
             if not user:
                 error = "Invalid credentials"
                 return render_template('index.html', error=error, email=email, signup_error=False)
+                #Without a session, HTTP requests are stateless, meaning the server doesn't automatically remember who made the previous request.
             session['user_email'] = email
             session['logged_in'] = True
             return redirect(url_for('user_dashboard'))
@@ -163,6 +164,7 @@ def user_dashboard():
     cursor= connection.cursor()
     cursor.execute("SELECT * FROM vaccines")
     vaccines = cursor.fetchall()
+    #Fetching deliveries belonging to the logged-in user
     cursor.execute("SELECT * FROM deliveries WHERE user_mail = %s", (session.get('user_email'),))
     deliveries = cursor.fetchall()
     cursor.close()
@@ -175,6 +177,7 @@ def tracking():
     if request.method == 'POST':
         vaccine_types =list()
         vaccine_counts = {}
+        #This avoids writing separate code for every vaccine.
         for vaccine in session.get('vaccines', []):
             count_key = f"vaccine_counts_{vaccine['name']}"
             count = request.form.get(count_key)
