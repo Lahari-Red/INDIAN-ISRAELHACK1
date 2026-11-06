@@ -335,7 +335,7 @@ def update_delivery_status(delivery_id):
     finally:
         conn.close()
         print(f"Database connection closed for delivery_id={delivery_id}")
-        
+  #storing the vaccine information      
 @app.route('/add_vaccine', methods=['POST'])
 def add_vaccine():
     vaccine_name = request.form.get('vaccine_name', '').strip()
