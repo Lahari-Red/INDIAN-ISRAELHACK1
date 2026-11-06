@@ -69,7 +69,7 @@ def astar(start, end, zones):
                 path.append(current.position)
                 current = current.parent
             return path[::-1]
-
+#Generate eight possible movements
         children = []
         for d_lat, d_lng in [(0.0005, 0), (0, 0.0005), (-0.0005, 0), (0, -0.0005),
                              (0.0005, 0.0005), (0.0005, -0.0005), (-0.0005, 0.0005), (-0.0005, -0.0005)]:
